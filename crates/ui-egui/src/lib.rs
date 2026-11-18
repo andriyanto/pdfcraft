@@ -292,6 +292,23 @@ struct DeferredOpen {
     display_override: Option<(canvas::PageLayout, bool)>,
 }
 
+/// The files that couldn't be opened while the toast has been saying so: a second failure adds
+/// to the notice instead of replacing it, so a batch of opens reports every file that failed.
+#[derive(Default)]
+struct OpenFailures {
+    /// How many files failed since the toast last showed something else.
+    count: usize,
+    /// The first [`OpenFailures::NAMED`] of them, in the order they failed.
+    names: Vec<String>,
+    /// The toast text this wrote: any other text there means the list starts again.
+    shown: Option<String>,
+}
+
+impl OpenFailures {
+    /// How many failed files the notice names before it counts the rest.
+    const NAMED: usize = 3;
+}
+
 /// Puts `(html, plain_text)` on a clipboard; `false` when it couldn't, and plain-text Copy is
 /// used instead.
 pub type HtmlClipboard = Box<dyn FnMut(&str, &str) -> bool>;
@@ -499,6 +516,8 @@ pub struct PdfCraftApp {
     /// Files waiting for room in the worker's bounded queue, in the order they were named.
     #[cfg(not(target_arch = "wasm32"))]
     deferred_opens: std::collections::VecDeque<DeferredOpen>,
+    /// Files that couldn't be opened, listed together in the toast ([`Self::notify_open_failure`]).
+    open_failures: OpenFailures,
     /// The open retrying a closed password prompt's file with its password: replies behind it
     /// wait for it.
     #[cfg(not(target_arch = "wasm32"))]
