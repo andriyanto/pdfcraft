@@ -1074,8 +1074,10 @@ fn toast_after_opening(app: &mut PdfCraftApp, paths: &[std::path::PathBuf]) -> S
 #[test]
 #[allow(clippy::expect_used, clippy::panic, clippy::unwrap_used)]
 fn every_file_that_fails_in_a_batch_of_opens_is_named() {
-    let dir = tempfile::tempdir().unwrap();
-    let missing = |name: &str| dir.path().join(name);
+    // `tempfile` is a dev-dependency on Linux only; this test runs on every platform.
+    let dir = std::env::temp_dir().join(format!("pdfcraft-open-failures-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let missing = |name: &str| dir.join(name);
     let mut app = PdfCraftApp::new();
     app.set_option("language", "en").expect("language preference");
 
@@ -1093,9 +1095,10 @@ fn every_file_that_fails_in_a_batch_of_opens_is_named() {
     assert_eq!(two, "Couldn't open 2 files: b.pdf, c.pdf");
 
     // Past three names the rest are counted, and a file that opens is not among them.
-    let good = dir.path().join("good.pdf");
+    let good = dir.join("good.pdf");
     std::fs::write(&good, fixture(1)).unwrap();
     let many = toast_after_opening(&mut app, &[missing("d.pdf"), good, missing("e.pdf"), missing("f.pdf")]);
     assert_eq!(many, "Couldn't open 5 files: b.pdf, c.pdf, d.pdf and 2 more");
     assert_eq!(app.views.len(), 1, "the readable file opened");
+    let _ = std::fs::remove_dir_all(&dir);
 }
