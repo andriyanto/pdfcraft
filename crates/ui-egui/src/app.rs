@@ -163,6 +163,7 @@ impl PdfCraftApp {
             pending_opens: Vec::new(),
             #[cfg(not(target_arch = "wasm32"))]
             deferred_opens: Default::default(),
+            open_failures: Default::default(),
             #[cfg(not(target_arch = "wasm32"))]
             password_retry: None,
             #[cfg(not(target_arch = "wasm32"))]
@@ -467,6 +468,43 @@ impl PdfCraftApp {
         self.script_messages_dropped = self.script_messages_dropped.saturating_add(std::mem::take(&mut self.toast_dropped));
         self.toast = Some((msg.into(), 0.0));
         self.toast_script = None;
+    }
+
+    /// Say that the file `name` couldn't be opened, as `message`. While the toast still shows an
+    /// earlier such failure, it names every file that failed instead: opening many files at once
+    /// would otherwise leave only the last failure on screen.
+    pub(crate) fn notify_open_failure(&mut self, name: &str, message: String) {
+        let failures = &mut self.open_failures;
+        let showing = self.toast.as_ref().is_some_and(|(shown, _)| failures.shown.as_deref() == Some(shown.as_str()));
+        if !showing {
+            failures.count = 0;
+            failures.names.clear();
+        }
+        failures.count = failures.count.saturating_add(1);
+        if failures.names.len() < crate::OpenFailures::NAMED {
+            failures.names.push(name.to_string());
+        }
+        let text = if failures.count == 1 {
+            message
+        } else {
+            let count = failures.count.to_string();
+            let names = failures.names.join(", ");
+            let more = failures.count.saturating_sub(failures.names.len());
+            if more == 0 {
+                i18n::fmt(tl!("Couldn't open {count} files: {names}"), &[("count", &count), ("names", &names)])
+            } else {
+                let more = more.to_string();
+                i18n::fmt(tl!("Couldn't open {count} files: {names} and {more} more"), &[("count", &count), ("names", &names), ("more", &more)])
+            }
+        };
+        self.open_failures.shown = Some(text.clone());
+        self.notify(text);
+    }
+
+    /// [`Self::notify_open_failure`] with a `{name}`-style template in the UI language.
+    pub(crate) fn notify_open_failure_fmt(&mut self, name: &str, template: &str, args: &[(&str, &str)]) {
+        let message = i18n::fmt(tl!(template), args);
+        self.notify_open_failure(name, message);
     }
 
     /// Notify with a static message in the UI language.
