@@ -9,10 +9,17 @@
 // The settings object in `persist` is one `json!` literal past the default limit of 128.
 #![recursion_limit = "256"]
 
+/// The GitHub `owner/repo` this build's releases come from. This repository is its own project:
+/// update checks and downloads never go to the repository it was copied from.
+pub const RELEASES_REPO: &str = "andriyanto/pdfcraft";
+
 /// PdfCraft as craft-update knows it, with its 128 px icon and accent colour: the update
-/// prompt shows both, and an AppImage's menu entry gets the icon.
+/// prompt shows both, and an AppImage's menu entry gets the icon. Its releases are those of
+/// [`RELEASES_REPO`], and the prompt names that repository's owner as the developer.
 #[cfg(not(target_arch = "wasm32"))]
 pub const UPDATE_APP: craft_update::app::App = craft_update::app::App {
+    repo: RELEASES_REPO,
+    developer: "andriyanto",
     icon_png: Some(include_bytes!("../../../assets/app-icon/hicolor/128x128/apps/ai.storyteller.pdfcraft.png")),
     accent: Some([0xb7, 0x02, 0x28]),
     ..craft_update::suite::PDFCRAFT
