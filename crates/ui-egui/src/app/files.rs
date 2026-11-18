@@ -208,7 +208,11 @@ impl PdfCraftApp {
                         if retry {
                             self.password_retry = None;
                         }
-                        self.notify_fmt("Couldn't open {name}: the background worker stopped", &[("name", &pending.name)]);
+                        self.notify_open_failure_fmt(
+                            &pending.name,
+                            "Couldn't open {name}: the background worker stopped",
+                            &[("name", &pending.name)],
+                        );
                         continue;
                     }
                 },
@@ -237,7 +241,7 @@ impl PdfCraftApp {
     fn finish_pending_open(&mut self, pending: PendingOpen, kind: open_worker::ResultKind) {
         match kind {
             open_worker::ResultKind::ReadFailed(reason) => {
-                self.notify_fmt("Couldn't read {name}: {e}", &[("name", &pending.name), ("e", &reason)]);
+                self.notify_open_failure_fmt(&pending.name, "Couldn't read {name}: {e}", &[("name", &pending.name), ("e", &reason)]);
             }
             open_worker::ResultKind::RemoteFailed(reason) => {
                 self.notify_fmt("Couldn't follow linked PDF: {reason}", &[("reason", &reason)]);
@@ -246,7 +250,7 @@ impl PdfCraftApp {
                 self.notify_fmt("Couldn't recover {name}: {e}", &[("name", &pending.name), ("e", &reason)]);
             }
             open_worker::ResultKind::Failed(reason) => {
-                self.notify_fmt("Couldn't open {name}: {reason}", &[("name", &pending.name), ("reason", &reason)]);
+                self.notify_open_failure_fmt(&pending.name, "Couldn't open {name}: {reason}", &[("name", &pending.name), ("reason", &reason)]);
             }
             open_worker::ResultKind::Conversion(bytes) => match self.open_converted(&pending.name, &bytes) {
                 Some(Ok(())) => {
@@ -254,7 +258,9 @@ impl PdfCraftApp {
                         self.execute(command);
                     }
                 }
-                Some(Err(error)) => self.notify_fmt("Couldn't open {name}: {e}", &[("name", &pending.name), ("e", &error)]),
+                Some(Err(error)) => {
+                    self.notify_open_failure_fmt(&pending.name, "Couldn't open {name}: {e}", &[("name", &pending.name), ("e", &error)])
+                }
                 None => {}
             },
             open_worker::ResultKind::Converted(created) => match self.open_converted_pdf(&pending.name, created) {
@@ -263,7 +269,7 @@ impl PdfCraftApp {
                         self.execute(command);
                     }
                 }
-                Err(error) => self.notify_fmt("Couldn't open {name}: {e}", &[("name", &pending.name), ("e", &error)]),
+                Err(error) => self.notify_open_failure_fmt(&pending.name, "Couldn't open {name}: {e}", &[("name", &pending.name), ("e", &error)]),
             },
             open_worker::ResultKind::Prepared { bytes, result } => match *result {
                 Ok(prepared) => match self.finish_open(&pending.name, pending.path.clone(), bytes.len(), prepared, pending.activate) {
@@ -287,7 +293,7 @@ impl PdfCraftApp {
                             self.execute(command);
                         }
                     }
-                    Err(error) => self.notify_fmt("Couldn't open {name}: {e}", &[("name", &pending.name), ("e", &error)]),
+                    Err(error) => self.notify_open_failure_fmt(&pending.name, "Couldn't open {name}: {e}", &[("name", &pending.name), ("e", &error)]),
                 },
                 Err(error @ (pdfcraft_render::OpenError::NeedsPassword | pdfcraft_render::OpenError::WrongPassword)) => {
                     let password_error =
@@ -306,7 +312,9 @@ impl PdfCraftApp {
                         display_override: pending.display_override,
                     });
                 }
-                Err(error) => self.notify_fmt("Couldn't open {name}: {e}", &[("name", &pending.name), ("e", &error.to_string())]),
+                Err(error) => {
+                    self.notify_open_failure_fmt(&pending.name, "Couldn't open {name}: {e}", &[("name", &pending.name), ("e", &error.to_string())])
+                }
             },
         }
     }
@@ -913,7 +921,7 @@ impl PdfCraftApp {
                     let before = self.views.len();
                     let previous_prompt = self.password_prompt.as_ref().map(|p| p.bytes.clone());
                     if let Err(error) = self.open_bytes(&name, Some(path.to_string()), bytes) {
-                        self.notify_fmt("Couldn't open {name}: {e}", &[("name", &name), ("e", &error)]);
+                        self.notify_open_failure_fmt(&name, "Couldn't open {name}: {e}", &[("name", &name), ("e", &error)]);
                         return OpenOutcome::Failed;
                     }
                     if let Some(prompt) = self.password_prompt.as_mut().filter(|p| {
@@ -947,7 +955,7 @@ impl PdfCraftApp {
                     OpenOutcome::Opened
                 }
                 Err(error) => {
-                    self.notify_fmt("Couldn't read {name}: {e}", &[("name", &name), ("e", &error.to_string())]);
+                    self.notify_open_failure_fmt(&name, "Couldn't read {name}: {e}", &[("name", &name), ("e", &error.to_string())]);
                     OpenOutcome::Failed
                 }
             }
@@ -977,7 +985,7 @@ impl PdfCraftApp {
                     OpenOutcome::Pending
                 }
                 Err(error) => {
-                    self.notify_fmt("Couldn't open {name}: {e}", &[("name", &name), ("e", &error)]);
+                    self.notify_open_failure_fmt(&name, "Couldn't open {name}: {e}", &[("name", &name), ("e", &error)]);
                     OpenOutcome::Failed
                 }
             }

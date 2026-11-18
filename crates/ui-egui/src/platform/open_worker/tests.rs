@@ -1054,3 +1054,51 @@ fn the_open_picker_defaults_to_pdf_and_offers_images_office_text_and_all_files()
     assert!(["doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "rtf"].iter().all(|e| extensions("Office documents").contains(e)));
     assert_eq!(extensions("Text"), pdfcraft_engine::TEXT_EXTENSIONS);
 }
+
+#[allow(clippy::expect_used, clippy::panic, clippy::unwrap_used)]
+fn toast_after_opening(app: &mut PdfCraftApp, paths: &[std::path::PathBuf]) -> String {
+    for path in paths {
+        app.open_path(&path.to_string_lossy());
+    }
+    let deadline = std::time::Instant::now() + Duration::from_secs(20);
+    while !app.pending_opens.is_empty() || !app.deferred_opens.is_empty() {
+        assert!(std::time::Instant::now() < deadline, "the opens never finished");
+        app.poll_pending_opens();
+        std::thread::sleep(Duration::from_millis(5));
+    }
+    app.toast.as_ref().map(|(message, _)| message.clone()).expect("a notice")
+}
+
+/// Opening several files at once used to leave only the last failure in the toast: the others
+/// were replaced before anyone could read them.
+#[test]
+#[allow(clippy::expect_used, clippy::panic, clippy::unwrap_used)]
+fn every_file_that_fails_in_a_batch_of_opens_is_named() {
+    // `tempfile` is a dev-dependency on Linux only; this test runs on every platform.
+    let dir = std::env::temp_dir().join(format!("pdfcraft-open-failures-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let missing = |name: &str| dir.join(name);
+    let mut app = PdfCraftApp::new();
+    app.set_option("language", "en").expect("language preference");
+
+    // One failure keeps its own message, reason included.
+    let one = toast_after_opening(&mut app, &[missing("a.pdf")]);
+    assert!(one.starts_with("Couldn't read a.pdf: "), "{one}");
+
+    // A notice about something else ends the list: the next failure stands alone again.
+    app.notify("Saved");
+    let alone = toast_after_opening(&mut app, &[missing("b.pdf")]);
+    assert!(alone.starts_with("Couldn't read b.pdf: "), "{alone}");
+
+    // Failures while that notice still shows are listed with it.
+    let two = toast_after_opening(&mut app, &[missing("c.pdf")]);
+    assert_eq!(two, "Couldn't open 2 files: b.pdf, c.pdf");
+
+    // Past three names the rest are counted, and a file that opens is not among them.
+    let good = dir.join("good.pdf");
+    std::fs::write(&good, fixture(1)).unwrap();
+    let many = toast_after_opening(&mut app, &[missing("d.pdf"), good, missing("e.pdf"), missing("f.pdf")]);
+    assert_eq!(many, "Couldn't open 5 files: b.pdf, c.pdf, d.pdf and 2 more");
+    assert_eq!(app.views.len(), 1, "the readable file opened");
+    let _ = std::fs::remove_dir_all(&dir);
+}
