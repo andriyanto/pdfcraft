@@ -2060,6 +2060,30 @@ fn replace_pages_from_thumbnail_context_menu() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+/// A page's thumbnail offers "Insert pages from a file…" on a right-click: the file's pages go in
+/// after that page, as Page tools ▸ Insert does for the selection.
+#[test]
+fn insert_pages_from_pages_panel_context_menu() {
+    let dir = temp_path("insert-panel-ctx");
+    std::fs::create_dir_all(&dir).unwrap();
+    let other = dir.join("other.pdf");
+    std::fs::write(&other, fixture(5)).unwrap();
+
+    let mut h = harness(4, |app| app.right = Some(pdfcraft_ui_egui::RightPanel::Pages));
+    h.state_mut().pick_override = Some(vec![other.to_string_lossy().into_owned()]);
+    let thumb = h.get_all_by_label("Page 2").max_by(|a, b| a.rect().left().total_cmp(&b.rect().left())).unwrap();
+    thumb.click_button(egui::PointerButton::Secondary);
+    h.run_steps(2);
+    h.get_all_by_label("Insert pages from a file…").last().unwrap().click();
+    h.run_steps(4);
+    // The other file's five pages go in after page 2, the page that was right-clicked.
+    assert_eq!(texts_of(h.state(), 0), ["Page 1", "Page 2", "Page 1", "Page 2", "Page 3", "Page 4", "Page 5", "Page 3", "Page 4"]);
+    let s = h.state();
+    let doc = s.session.get(s.views[0].id).unwrap();
+    assert!(doc.can_undo().is_some_and(|label| label.starts_with("Insert pages from")), "{:?}", doc.can_undo());
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 #[test]
 fn replace_pages_from_pages_panel_context_menu() {
     let dir = temp_path("replace-panel-ctx");

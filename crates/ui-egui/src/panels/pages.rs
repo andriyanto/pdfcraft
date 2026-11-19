@@ -209,6 +209,11 @@ pub(super) fn pages(
                     view.pending_action = Some(crate::canvas::ViewAction::SplitBeforeSelected);
                     ui.close();
                 }
+                // After the selection, which the press above made this page when it was outside it.
+                if ui.add_enabled(editable, egui::Button::new(tl!("Insert pages from a file…"))).clicked() {
+                    view.pending_action = Some(crate::canvas::ViewAction::InsertFromFile);
+                    ui.close();
+                }
                 if ui.add_enabled(editable, egui::Button::new(tl!("Replace pages…"))).clicked() {
                     view.pending_action = Some(crate::canvas::ViewAction::ReplacePages);
                     ui.close();
