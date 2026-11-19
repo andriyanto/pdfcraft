@@ -1,17 +1,14 @@
-//! Where PdfKu and the ArtCraft community live on the web. One table, so the Help menu, the
-//! About dialog, the home screen, the CLI and the README agree.
+//! Where PdfKu lives on the web. One table, so the Help menu, the About dialog, the home screen,
+//! the CLI and the README agree.
 
 use icu_properties::props::Script;
 use std::path::{Path, PathBuf};
 
-/// The app's name in ArtCraft URLs (`getartcraft.com/apps/{APP}`, `github.com/storytold/{APP}`).
-pub const APP: &str = "pdfcraft";
-
-pub const DISCORD: &str = "https://discord.gg/artcraft";
-pub const WEBSITE: &str = "https://getartcraft.com";
 /// PdfKu has no page of its own: its repository's README is its page.
 pub const APP_PAGE: &str = "https://github.com/andriyanto/pdfku#readme";
 pub const GITHUB: &str = "https://github.com/andriyanto/pdfku";
+/// Where problems are reported and help is asked for.
+pub const ISSUES: &str = "https://github.com/andriyanto/pdfku/issues";
 
 /// A link and the registry command that opens it.
 #[derive(Clone, Copy, Debug)]
@@ -23,12 +20,11 @@ pub struct Link {
     pub icon: &'static str,
 }
 
-/// In the order they are shown. Discord comes first: it is where people get help fastest.
+/// In the order they are shown.
 pub const LINKS: &[Link] = &[
-    Link { command: "help.discord", label: "Join the ArtCraft Discord", url: DISCORD, icon: "messages-square" },
-    Link { command: "help.app_page", label: "PdfKu web page", url: APP_PAGE, icon: "globe" },
     Link { command: "help.github", label: "PdfKu on GitHub", url: GITHUB, icon: "code-xml" },
-    Link { command: "help.website", label: "ArtCraft website", url: WEBSITE, icon: "external-link" },
+    Link { command: "help.app_page", label: "PdfKu web page", url: APP_PAGE, icon: "globe" },
+    Link { command: "help.issues", label: "Report a problem", url: ISSUES, icon: "messages-square" },
 ];
 
 pub fn for_command(id: &str) -> Option<&'static Link> {
