@@ -18,7 +18,14 @@ pub const RELEASES_REPO: &str = "andriyanto/pdfku";
 /// [`RELEASES_REPO`], and the prompt names that repository's owner as the developer.
 #[cfg(not(target_arch = "wasm32"))]
 pub const UPDATE_APP: craft_update::app::App = craft_update::app::App {
+    // The programs are `pdfku` and `pdfku-cli`, and release assets are named `pdfku-<version>-…`.
+    id: "pdfku",
     name: "PdfKu",
+    // No release of this project ever carried another name.
+    former_ids: &[],
+    former_names: &[],
+    // The desktop-file, Flatpak and bundle id is still the one the packages register.
+    bundle_id_override: Some("ai.storyteller.pdfcraft"),
     repo: RELEASES_REPO,
     developer: "andriyanto",
     icon_png: Some(include_bytes!("../../../assets/app-icon/hicolor/128x128/apps/ai.storyteller.pdfcraft.png")),

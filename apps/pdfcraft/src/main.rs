@@ -1,6 +1,6 @@
 //! PdfKu desktop app.
 //!
-//! Usage: `pdfcraft [options] [files…]` (`-h` / `--help` prints a short version of this, [`USAGE`]).
+//! Usage: `pdfku [options] [files…]` (`-h` / `--help` prints a short version of this, [`USAGE`]).
 //! `--two-paged` opens each command-line PDF in noncontinuous two-page view, without changing defaults.
 //! An explicit `--layout` takes precedence for the active document, regardless of argument order.
 //! `--create-images [images…]` stages the images in one PDF and asks for the page DPI.
@@ -21,7 +21,7 @@
 //! `--control <file>` enables the UI control channel (off by default): the app listens on a random
 //! loopback port and writes `{"port", "token", "pid"}` to `<file>` (owner-only permissions). The
 //! app doesn't start if it can't.
-//! Agents then drive it with `pdfcraft-cli ui --control <file> <method> …`.
+//! Agents then drive it with `pdfku-cli ui --control <file> <method> …`.
 
 // Release builds on Windows are GUI-subsystem programs, so launching the app doesn't open a console
 // window next to it (#57). `--version` and diagnostics then go nowhere when started from a terminal
@@ -61,9 +61,9 @@ const APP_ICON_PNG: &[u8] = include_bytes!("../../../assets/app-icon/pdfcraft-10
 const APP_ICON_PNG: &[u8] = include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/ai.storyteller.pdfcraft.png");
 
 /// What `-h` / `--help` prints (#4076): a hint, not the full option list (that is this file's
-/// doc comment and the README). Scripts want `pdfcraft-cli`, which never opens a window.
+/// doc comment and the README). Scripts want `pdfku-cli`, which never opens a window.
 const USAGE: &str = "\
-Usage: pdfcraft [options] [files…]
+Usage: pdfku [options] [files…]
 
 Opens the files in the PdfKu desktop app.
 
@@ -72,13 +72,13 @@ Options:
   --new-window                open a window of its own instead of passing the files to a running PdfKu
   --create-images [images…]   put the images in one PDF and ask for the page DPI
   --combine files…            add the files to the Combine files tab, of a running PdfKu if there is one
-  --control <file>            enable the UI control channel (pdfcraft-cli ui --control <file> …)
+  --control <file>            enable the UI control channel (pdfku-cli ui --control <file> …)
   --page N, --zoom 150, --layout continuous, --theme dark, …
                               view settings applied once the files are open
   -h, --help                  print this and exit
   --version                   print the version and exit
 
-To inspect, convert or edit PDFs from a script, use pdfcraft-cli (pdfcraft-cli --help).";
+To inspect, convert or edit PDFs from a script, use pdfku-cli (pdfku-cli --help).";
 
 /// Print `text` for `--help` and `--version`. `println!` would panic on a full or closed
 /// standard output; this exits normally instead.
@@ -171,7 +171,7 @@ fn path_from_arg(arg: String) -> String {
     String::from_utf8(out).unwrap_or(arg)
 }
 
-/// Some programs start the PDF reader with the path unquoted (`pdfcraft.exe P:\Docs\01 Contract.PDF`),
+/// Some programs start the PDF reader with the path unquoted (`pdfku.exe P:\Docs\01 Contract.PDF`),
 /// so a path with spaces arrives split into several arguments (Acrobat accepts this). When an
 /// argument names no file but it and the ones after it, joined with one space, do, rejoin them
 /// (the longest such run). Anything else is kept as given. Runs of several spaces can't be recovered: the split has lost them.
@@ -233,12 +233,12 @@ fn main() -> eframe::Result {
             log::error!("{report}");
         } else {
             // `eprintln!` panics on a broken stderr pipe, and a panic inside the panic hook aborts.
-            let _ = std::io::Write::write_fmt(&mut std::io::stderr(), format_args!("pdfcraft: {report}\n"));
+            let _ = std::io::Write::write_fmt(&mut std::io::stderr(), format_args!("pdfku: {report}\n"));
         }
     }));
     let mut startup = startup::Arguments::parse(std::env::args().skip(1));
     if startup.version {
-        return print_and_exit(&format!("pdfcraft {}", pdfcraft_engine::build_info::version()));
+        return print_and_exit(&format!("pdfku {}", pdfcraft_engine::build_info::version()));
     }
     if startup.help {
         return print_and_exit(USAGE);
@@ -557,7 +557,7 @@ fn app_creator<'a>(
 
 /// Tell the user when wgpu draws on the processor (WARP on Windows, llvmpipe on Linux) rather than
 /// a GPU, which makes everything slower. egui-wgpu only logs it, so the reporter of #519 had to find
-/// it in pdfcraft.log. The OpenGL fallback isn't covered: glow only reports its renderer through
+/// it in pdfku.log. The OpenGL fallback isn't covered: glow only reports its renderer through
 /// `unsafe` calls.
 fn notify_software_renderer(app: &mut PdfCraftApp, device_type: eframe::wgpu::DeviceType) {
     if device_type == eframe::wgpu::DeviceType::Cpu {
@@ -580,7 +580,7 @@ fn open_control_channel(file: &str, endpoint: std::io::Result<pdfcraft_ui_egui::
         }
         Err(e) => {
             // cmd.exe doesn't expand `~` (#3922).
-            let example = if cfg!(windows) { r"%USERPROFILE%\.pdfcraft-control.json" } else { "~/.pdfcraft-control.json" };
+            let example = if cfg!(windows) { r"%USERPROFILE%\.pdfku-control.json" } else { "~/.pdfku-control.json" };
             let message = format!("--control {file}: {e}. Use a control file in a folder only you can write, such as {example}");
             log::error!("{message}");
             Err(message)

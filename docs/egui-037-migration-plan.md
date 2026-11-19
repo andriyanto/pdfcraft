@@ -510,7 +510,7 @@ Scope (one reviewable change set; commits may split by file only if every commit
   include the focused logical-text/selection regression in this first fork pin.
 - Do not defer names, glyphs, attribution, required bidi adaptation or `deny` to PR 3.
 
-Tests: fmt, clippy `-D warnings`, `cargo test -p pdfcraft-ui-egui`, `cargo test -p pdfcraft`, wasm check, `cargo xtask layers/assets/deny/parity`, native feature/graph assertions, source-guard replacements. Snapshot changes must be reviewed, never auto-accepted.
+Tests: fmt, clippy `-D warnings`, `cargo test -p pdfcraft-ui-egui`, `cargo test -p pdfku`, wasm check, `cargo xtask layers/assets/deny/parity`, native feature/graph assertions, source-guard replacements. Snapshot changes must be reviewed, never auto-accepted.
 
 Rollback: revert PR 1; keep the 0.36 lock and vendor directories in history. Do not leave a 0.37 manifest with a 0.36 lock.
 
@@ -694,9 +694,9 @@ Noise policy: if baseline median varies by more than 3% across repetitions, disc
 Required for every PR:
 
 - `cargo fmt --check`
-- `cargo clippy -p pdfcraft-ui-egui -p pdfcraft -p pdfcraft-web --all-targets -- -D warnings`
+- `cargo clippy -p pdfcraft-ui-egui -p pdfku -p pdfcraft-web --all-targets -- -D warnings`
 - `cargo test -p pdfcraft-ui-egui`
-- `cargo test -p pdfcraft`
+- `cargo test -p pdfku`
 - `cargo check -p pdfcraft-web --target wasm32-unknown-unknown`
 - `cargo xtask layers`
 - `cargo xtask assets`

@@ -149,12 +149,12 @@ If you find an asset that breaks these rules, stop and remove it from the reposi
 
 ## 3. Agent control (automation and MCP)
 
-- **Everything is reachable headlessly.** Every user-facing feature must be callable without the GUI: an engine API, then a tool in `crates/automation` (`pdfcraft-cli run` and MCP use the same table). A feature is not done until its tool exists and has an end-to-end test (`crates/automation/README.md`, "Adding a tool").
+- **Everything is reachable headlessly.** Every user-facing feature must be callable without the GUI: an engine API, then a tool in `crates/automation` (`pdfku-cli run` and MCP use the same table). A feature is not done until its tool exists and has an end-to-end test (`crates/automation/README.md`, "Adding a tool").
 - **The UI control channel is opt-in too.** It runs only when the app is launched with `--control <file>`. It binds to loopback, uses a fresh random token per launch, and writes it to an owner-only file (mode 0600 on Unix; on Windows an access list of the user and SYSTEM only, which `pdfcraft_platform::owner_only` sets and checks, and which the CLI checks again before reading the token). Never enable it by default, widen the bind address, or log the token.
-- **The MCP server is opt-in.** Never make the app, the CLI or an installer start it, register it with an agent, or listen on a port by default. It runs only when a user (or an agent the user configured) launches `pdfcraft-cli mcp`. Any future network transport must be off by default, bound to loopback and authenticated with a token.
+- **The MCP server is opt-in.** Never make the app, the CLI or an installer start it, register it with an agent, or listen on a port by default. It runs only when a user (or an agent the user configured) launches `pdfku-cli mcp`. Any future network transport must be off by default, bound to loopback and authenticated with a token.
 - **Safe by default.** Tools must never discard unsaved work silently, must write atomically, must honour `--root`, and must return errors an agent can act on (say what was wrong and what is allowed).
 - **Track parity honestly.** Every user-facing feature has an entry in `parity/acrobat-features.toml`. Mark it `shipped` only when it works end to end and the entry cites a passing test (`evidence`); `cargo xtask parity` (part of `xtask ci`) rejects claims whose commands, tools or tests don't exist.
-- **Use it to test.** Agents should drive the engine through `pdfcraft-cli run --script` or the MCP tools, and look at `page_render` output, to check their own changes. For UI changes, launch the app with `--control` and use `pdfcraft-cli ui` (`inspect`, `click`, `screenshot`) to check the real interface.
+- **Use it to test.** Agents should drive the engine through `pdfku-cli run --script` or the MCP tools, and look at `page_render` output, to check their own changes. For UI changes, launch the app with `--control` and use `pdfku-cli ui` (`inspect`, `click`, `screenshot`) to check the real interface.
 
 ## 4. Never crash
 
@@ -181,7 +181,7 @@ PdfCraft opens files from strangers, and people trust it with their work. A malf
 - **Quality gates** before every commit: `cargo fmt --check`, clippy with `-D warnings`, the tests, `cargo xtask layers`, `cargo xtask assets`, and the wasm check. New workspace crates include `workspace = true` under `[lints]`. Scope `cargo clippy -p <crate> --all-targets -- -D warnings` and `cargo test -p <crate>` to the crates you touched; the workspace sweep is CI's job.
 - **Review at four zooms** as you go: the clause, the function, the module, and the project (layering, wasm, undo, save fidelity, a matching automation tool, an honest `parity/` entry). Prove a test fails before the fix by reverting the fix once.
 - `plan/` is an optional gitignored notebook. Do not ask for it and do not stop when it is absent. Public status is [`ROADMAP.md`](ROADMAP.md), [`docs/gaps.md`](docs/gaps.md) and [`docs/roadmap.md`](docs/roadmap.md). "Shipped" in `parity/` means exists and tested, not parity with Acrobat.
-- `cargo run -p pdfcraft -- <file.pdf>` opens the app. `pdfcraft-cli run` drives the engine headlessly. `cargo xtask fuzz` findings stay in `fuzz-out/` and become synthetic tests. For UI work, look at a screenshot from `--control` or the `shot` example.
+- `cargo run -p pdfku -- <file.pdf>` opens the app. `pdfku-cli run` drives the engine headlessly. `cargo xtask fuzz` findings stay in `fuzz-out/` and become synthetic tests. For UI work, look at a screenshot from `--control` or the `shot` example.
 
 ## Contributor credits (About window)
 

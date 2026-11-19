@@ -18,9 +18,9 @@ pub fn target_dir() -> PathBuf {
     std::env::var_os("CARGO_TARGET_DIR").map_or_else(|| root().join("target"), |d| root().join(d))
 }
 
-/// The release `pdfcraft-cli` that `cargo build --release -p pdfcraft-cli` produced.
+/// The release `pdfku-cli` that `cargo build --release -p pdfku-cli` produced.
 pub fn release_cli() -> PathBuf {
-    target_dir().join("release").join(format!("pdfcraft-cli{}", std::env::consts::EXE_SUFFIX))
+    target_dir().join("release").join(format!("pdfku-cli{}", std::env::consts::EXE_SUFFIX))
 }
 
 fn cargo() -> Command {
@@ -111,7 +111,7 @@ pub fn ci(_: &[String]) -> anyhow::Result<()> {
     let steps: Vec<Step> = vec![
         ("fmt", Box::new(|| run_args(&["fmt", "--all", "--", "--check"]))),
         ("clippy", Box::new(|| run_args(&["clippy", "--workspace", "--all-targets", "--", "-D", "warnings"]))),
-        ("cli-no-default-features", Box::new(|| run_args(&["check", "-p", "pdfcraft-cli", "--no-default-features"]))),
+        ("cli-no-default-features", Box::new(|| run_args(&["check", "-p", "pdfku-cli", "--no-default-features"]))),
         ("test", Box::new(|| test(&[]))),
         ("i18n-report", Box::new(|| i18n_report(&["--workspace".to_string()]))),
         ("layers", Box::new(|| layers(&[]))),
@@ -197,11 +197,11 @@ pub fn check(args: &[String]) -> anyhow::Result<()> {
         }
         crate::corpus::State::Verified { files } => println!("corpus verified: {files} files at {}", crate::corpus::PDFJS_COMMIT),
     }
-    run_args(&["build", "--release", "-p", "pdfcraft-cli"])?;
+    run_args(&["build", "--release", "-p", "pdfku-cli"])?;
     let report = target_dir().join("check-pdfjs.json");
     let mut c = Command::new(release_cli());
     c.args(["check"]).arg(&corpus).args(["--timeout", "20", "--dpi", "36", "--json"]).arg(&report);
-    run(c, "pdfcraft-cli check corpus/pdfjs")?;
+    run(c, "pdfku-cli check corpus/pdfjs")?;
     let results: Vec<serde_json::Value> = serde_json::from_str(&std::fs::read_to_string(&report)?)?;
     let name =
         |v: &serde_json::Value| Path::new(v["file"].as_str().unwrap_or("")).file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
@@ -239,7 +239,7 @@ pub fn check(args: &[String]) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// `cargo xtask text-oracle [--limit N]`: compare `pdfcraft-cli text` with poppler's `pdftotext`
+/// `cargo xtask text-oracle [--limit N]`: compare `pdfku-cli text` with poppler's `pdftotext`
 /// (external oracle process, never linked) over the corpus.
 ///
 /// Two scores per file, because one hides the other. **Word F1** ([`f1`]) is a bag of words: it
@@ -253,7 +253,7 @@ pub fn text_oracle(args: &[String]) -> anyhow::Result<()> {
         Ok(o) => o,
         Err(absent) => bail!("{absent}"),
     };
-    run_args(&["build", "--release", "-p", "pdfcraft-cli"])?;
+    run_args(&["build", "--release", "-p", "pdfku-cli"])?;
     let corpus = root().join("corpus/pdfjs/test/pdfs");
     let mut files: Vec<PathBuf> =
         std::fs::read_dir(&corpus)?.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|e| e == "pdf")).collect();
@@ -266,7 +266,7 @@ pub fn text_oracle(args: &[String]) -> anyhow::Result<()> {
     let mut not_permitted = 0usize;
     let mut truncated = 0usize;
     for f in files.iter().take(limit) {
-        // A document may forbid copying its text, and we honour that: `pdfcraft-cli text` refuses
+        // A document may forbid copying its text, and we honour that: `pdfku-cli text` refuses
         // and says how to override it with the owner password. pdftotext ignores the flag and
         // extracts anyway, so scoring us against it there measures obedience, not quality --
         // bug1815476.pdf scored 0.000 for behaving correctly on a page we render perfectly.
@@ -388,7 +388,7 @@ pub fn render_oracle(args: &[String]) -> anyhow::Result<()> {
         Ok(tool) => tool,
         Err(absent) => bail!("{absent}"),
     };
-    run_args(&["build", "--release", "-p", "pdfcraft-cli"])?;
+    run_args(&["build", "--release", "-p", "pdfku-cli"])?;
     let cli = release_cli();
 
     let mut files: Vec<PathBuf> = std::fs::read_dir(&dir)

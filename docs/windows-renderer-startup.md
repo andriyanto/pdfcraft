@@ -47,7 +47,7 @@ not the underlying host-specific shader compiler defect.
 ```powershell
 $env:PDFCRAFT_TEST_REQUIRE_GPU = '1'
 $env:WGPU_BACKEND = 'vulkan'
-cargo test --locked -p pdfcraft pipeline_creation_error_is_returned_and_device_remains_usable -- --nocapture
+cargo test --locked -p pdfku pipeline_creation_error_is_returned_and_device_remains_usable -- --nocapture
 ```
 
 An ordinary run reports an unavailable GPU branch as skipped. `PDFCRAFT_TEST_REQUIRE_GPU`

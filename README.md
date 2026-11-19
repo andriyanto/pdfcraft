@@ -67,12 +67,12 @@ Perlu Rust 1.95 atau yang lebih baru.
 git clone https://github.com/andriyanto/pdfku
 cd pdfku
 cargo xtask models                           # unduh model OCR untuk Scan & OCR
-cargo run --release -p pdfcraft -- berkas.pdf   # jalankan aplikasi desktop
+cargo run --release -p pdfku -- berkas.pdf      # jalankan aplikasi desktop
 ```
 
 Catatan pengembangan (log, variabel lingkungan, pengujian) ada di
-[docs/development.md](docs/development.md). Nama paket di dalam kode masih memakai awalan
-`pdfcraft`; itu nama internal dan tidak tampil ke pengguna.
+[docs/development.md](docs/development.md). Pustaka di dalam kode masih memakai awalan
+`pdfcraft-`; itu nama internal dan tidak tampil ke pengguna.
 
 ## Baris perintah dan otomasi
 

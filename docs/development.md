@@ -8,7 +8,7 @@ collects what the desktop app reads from its environment and where it writes its
 When local build storage is constrained, select the opt-in `low-disk` profile explicitly:
 
 ```sh
-cargo build --profile low-disk -p pdfcraft-cli
+cargo build --profile low-disk -p pdfku-cli
 cargo test --profile low-disk -p pdfcraft-cos --lib
 ```
 
@@ -39,8 +39,8 @@ the current choice and the other valid settings.
 The existing opt-in UI control channel uses the same preference:
 
 ```sh
-pdfcraft-cli ui --control /path/to/control.json set key=comment-tool-pinned value=true
-pdfcraft-cli ui --control /path/to/control.json state
+pdfku-cli ui --control /path/to/control.json set key=comment-tool-pinned value=true
+pdfku-cli ui --control /path/to/control.json state
 ```
 
 `ui.state.comment_tool_pinned` reports the boolean. `ui.set` accepts `true` or `false` and refuses
@@ -70,7 +70,7 @@ do not contact a desktop session bus. Page and document colours retain their exi
 
 ## Logs
 
-The desktop app writes its `log` records to standard error and to `logs/pdfcraft.log` in its
+The desktop app writes its `log` records to standard error and to `logs/pdfku.log` in its
 data folder: Linux and FreeBSD `~/.local/share/pdfcraft/logs/` (or
 `$XDG_DATA_HOME/pdfcraft/logs/`), macOS `~/Library/Application Support/PdfCraft/logs/`, Windows
 `%APPDATA%\PdfCraft\data\logs\`. In portable mode (a `portable.txt` file next to the executable, as
@@ -101,7 +101,7 @@ at a correspondingly lower scale instead of panicking in `Surface::configure` (v
 stretched over the window: softer, but complete and lined up with the pointer. wgpu's GL backend
 copies it unscaled into a corner of the window instead.
 
-For blurry or incorrectly scaled UI reports, attach `pdfcraft.log`. Look for the successful
+For blurry or incorrectly scaled UI reports, attach `pdfku.log`. Look for the successful
 startup `renderer:` line, which records the wgpu adapter, device type, backend and enabled texture
 limit, or the OpenGL renderer. Also look for the `drawing it at … and scaling it up` warning: it
 means PdfCraft hit the surface-size safety fallback and rendered below the physical window size, so

@@ -165,7 +165,7 @@ fn the_window_and_windows_taskbar_icons_load_from_the_bundled_png() {
 #[test]
 fn a_software_renderer_is_shown_to_the_user() {
     use eframe::wgpu::DeviceType;
-    // Issue #519: WARP or llvmpipe is announced in the app, not just in pdfcraft.log.
+    // Issue #519: WARP or llvmpipe is announced in the app, not just in pdfku.log.
     let mut app = super::PdfCraftApp::new();
     super::notify_software_renderer(&mut app, DeviceType::Cpu);
     let notice = app.toast.as_ref().map(|(m, _)| m.as_str()).unwrap_or_default();
