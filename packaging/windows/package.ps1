@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Build, sign and package PdfCraft for Windows.
+  Build, sign and package PdfKu for Windows.
 
 .DESCRIPTION
   Produces, in $env:DIST (default: dist/release):
@@ -67,7 +67,7 @@ New-Item -ItemType Directory -Force -Path $Dist | Out-Null
 if (-not $env:PDFCRAFT_BUILD_SHA) { $env:PDFCRAFT_BUILD_SHA = (git -C $Root rev-parse HEAD 2>$null) }
 if (-not $env:PDFCRAFT_BUILD_DATE) { $env:PDFCRAFT_BUILD_DATE = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd') }
 
-Write-Output "PdfCraft $Version for Windows $Arch ($Target)"
+Write-Output "PdfKu $Version for Windows $Arch ($Target)"
 
 if (-not $SkipBuild) {
   # Static CRT: no VC++ redistributable needed. Scoped to the target so host build scripts and
@@ -179,7 +179,7 @@ if ($HasCraftFontLicences -eq 1) {
   Copy-Item (Join-Path $Docs 'OFL-*.txt') $Portable
 }
 # portable.txt beside pdfcraft.exe switches on portable mode: settings, logs, recovery files and new
-# digital IDs go to PdfCraftData\ next to the exe instead of %APPDATA% (#157; see
+# digital IDs go to PdfKuData\ next to the exe instead of %APPDATA% (#157; see
 # crates/ui-egui/src/portable.rs).
 Copy-Item (Join-Path $PSScriptRoot 'portable.txt') $Portable
 $Zip = Join-Path $Dist "pdfcraft-$Version-windows-$Arch-portable.zip"
