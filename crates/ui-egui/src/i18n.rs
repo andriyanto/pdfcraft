@@ -527,7 +527,37 @@ pub fn current() -> Lang {
 
 /// Does `lang` have a catalog entry for this plain string? (English never does: it is the source.)
 pub fn has(lang: Lang, s: &str) -> bool {
-    lang.i18n().get(lang.lang, "", s).is_some()
+    lang.i18n().get(lang.lang, "", s).is_some() || catalog_source(s).is_some_and(|source| lang.i18n().get(lang.lang, "", &source).is_some())
+}
+
+/// The app's name as the interface says it.
+const APP_NAME: &str = "PdfKu";
+/// The app's name in the craft-i18n catalogs, which are shared with the project PdfKu started
+/// from: their sources and translations say this name wherever the interface says [`APP_NAME`].
+const CATALOG_NAME: &str = "PdfCraft";
+
+/// `s` as the catalogs spell it, when it names the app: the source to look up for it.
+fn catalog_source(s: &str) -> Option<String> {
+    s.contains(APP_NAME).then(|| s.replace(APP_NAME, CATALOG_NAME))
+}
+
+/// A catalog's translation with the app's own name in it. A translation that names the app is
+/// rewritten once and kept for the life of the process (there is one per sentence that names
+/// the app, per language), so callers keep getting a `&str`.
+fn own_name(translated: &str) -> &str {
+    if translated.contains(CATALOG_NAME) { kept(translated.replace(CATALOG_NAME, APP_NAME)) } else { translated }
+}
+
+/// `text` for the life of the process: one copy per distinct text.
+fn kept(text: String) -> &'static str {
+    static KEPT: LazyLock<std::sync::Mutex<HashSet<&'static str>>> = LazyLock::new(Default::default);
+    let mut kept = KEPT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if let Some(known) = kept.get(text.as_str()) {
+        return known;
+    }
+    let leaked: &'static str = Box::leak(text.into_boxed_str());
+    kept.insert(leaked);
+    leaked
 }
 
 /// Translate an English UI string into the current language ([`tr`] with [`current`]).
@@ -544,7 +574,18 @@ pub fn key_name(s: &str) -> &str {
 
 /// Translate an English UI string; unknown strings come back unchanged.
 pub fn tr(lang: Lang, s: &str) -> &str {
-    lang.i18n().t(lang.lang, s)
+    let found = lang.i18n().t(lang.lang, s);
+    if found != s {
+        return own_name(found);
+    }
+    // A sentence that names the app is in the catalogs under their name for it.
+    match catalog_source(s) {
+        Some(source) => match lang.i18n().t(lang.lang, &source) {
+            translated if translated != source => kept(translated.replace(CATALOG_NAME, APP_NAME)),
+            _ => s,
+        },
+        None => s,
+    }
 }
 
 /// How the layers below say their own sentences in the current language.
@@ -560,13 +601,23 @@ pub fn words(wording: &str) -> String {
 
 /// Like [`tr`], for an English string that needs a disambiguating `context`.
 pub fn tr_ctx<'a>(lang: Lang, context: &str, s: &'a str) -> &'a str {
-    lang.i18n().tc(lang.lang, context, s)
+    let found = lang.i18n().tc(lang.lang, context, s);
+    if found != s {
+        return own_name(found);
+    }
+    match catalog_source(s) {
+        Some(source) => match lang.i18n().tc(lang.lang, context, &source) {
+            translated if translated != source => kept(translated.replace(CATALOG_NAME, APP_NAME)),
+            _ => s,
+        },
+        None => s,
+    }
 }
 
 /// A string keyed by its command id, falling back to the translation of the English `label`. Only
 /// PdfKu's own `@id` rows count ([`own_id`]).
 pub fn tr_id<'a>(lang: Lang, id: &str, label: &'a str) -> &'a str {
-    if own_id(lang, id, label) { lang.i18n().tid(lang.lang, id, label) } else { tr(lang, label) }
+    if own_id(lang, id, label) { own_name(lang.i18n().tid(lang.lang, id, label)) } else { tr(lang, label) }
 }
 
 /// Whether `lang` has PdfKu's own `@id` row for `id` ([`Lang::has_own`]: command ids are each
@@ -681,7 +732,7 @@ pub fn command_label(text: &str) -> String {
 pub fn menu_label(id: &str, label: &str) -> String {
     let lang = current();
     match own_id(lang, id, label).then(|| lang.i18n().get(lang.lang, "@id", id)).flatten() {
-        Some(translated) => translated.to_owned(),
+        Some(translated) => own_name(translated).to_owned(),
         None => command_label(label),
     }
 }
@@ -690,7 +741,8 @@ pub fn menu_label(id: &str, label: &str) -> String {
 /// The form is the language's CLDR category; `{n}` is written in `0`–`9` without grouping or
 /// isolate marks, as PdfKu always has.
 pub fn trn(lang: Lang, n: u64, one: &str, other: &str) -> String {
-    lang.i18n().trn_plain(lang.lang, n, one, other)
+    let said = lang.i18n().trn_plain(lang.lang, n, one, other);
+    if said.contains(CATALOG_NAME) { said.replace(CATALOG_NAME, APP_NAME) } else { said }
 }
 
 /// `name` lowercased with the Latin accents that occur in language names folded away, so a
