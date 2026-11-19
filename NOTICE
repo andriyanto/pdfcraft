@@ -1,11 +1,12 @@
-PdfCraft
+PdfKu
+Copyright (c) 2026 the PdfKu contributors.
+PdfKu is a modified version of PdfCraft:
 Copyright (c) 2026 ArtCraft Team and the PdfCraft contributors.
 Licensed under the MIT License or the Apache License, Version 2.0, at your option
 (LICENSE-MIT, LICENSE-APACHE).
 
-The ArtCraft name, wordmark and logos in docs/brand/ are trademarks of the ArtCraft Team. They are
-not open source and are not covered by the license above; their terms are in
-docs/brand/LICENSE-brand.txt.
+The ArtCraft name, wordmark and logos are trademarks of the ArtCraft Team. They are not open
+source, and PdfKu does not use them: PdfKu is not made, sponsored or endorsed by the ArtCraft Team.
 
 Third-party material
 
