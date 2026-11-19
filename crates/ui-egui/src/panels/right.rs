@@ -378,7 +378,7 @@ pub fn right_panel(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
                                 })
                             });
                             // A double-click opens a PDF in a new tab, as Acrobat opens an attachment;
-                            // any other file is saved, since PdfCraft opens only PDFs.
+                            // any other file is saved, since PdfKu opens only PDFs.
                             if row.response.double_clicked() {
                                 attachment_action = Some((ai, is_pdf));
                             }

@@ -35,8 +35,8 @@ impl Arguments {
                 }
                 "--control" => parsed.control_file = args.next(),
                 "--create-images" => parsed.create_images = true,
-                // File Explorer's "Combine files in PdfCraft" (#585): the files go to the Combine
-                // files tab, of the running PdfCraft when there is one.
+                // File Explorer's "Combine files in PdfKu" (#585): the files go to the Combine
+                // files tab, of the running PdfKu when there is one.
                 "--combine" => parsed.combine = true,
                 "--new-window" => parsed.new_window = true,
                 "--two-paged" => parsed.two_paged = true,

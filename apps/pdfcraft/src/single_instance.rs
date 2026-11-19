@@ -1,10 +1,10 @@
-//! One PdfCraft per Windows sign-in or Linux/BSD display: a launch that only names files hands them
-//! to the PdfCraft that is already running, where they open as tabs, and exits (#282, #317, #1726).
+//! One PdfKu per Windows sign-in or Linux/BSD display: a launch that only names files hands them
+//! to the PdfKu that is already running, where they open as tabs, and exits (#282, #317, #1726).
 //!
 //! Outlook attachments, Explorer double-clicks and Open With all start `pdfcraft.exe "<file>"`, and
 //! a file manager or `xdg-open` starts `pdfcraft <file>` the same way, so until now every file got
-//! its own process and window. The first PdfCraft listens on a Unix domain socket. On Windows (10
-//! 1803 and later) it is in `%LOCALAPPDATA%\PdfCraft` (a portable copy's too, as
+//! its own process and window. The first PdfKu listens on a Unix domain socket. On Windows (10
+//! 1803 and later) it is in `%LOCALAPPDATA%\PdfKu` (a portable copy's too, as
 //! `portable-instance-…` and never in its own folder, #889) and is named after the Windows
 //! session (`instance-s1.sock` for session 1), so two sign-ins of the same
 //! user never open files in each other's windows. On Linux and the BSDs it is in
@@ -15,7 +15,7 @@
 //! the app's own and is shared by every run of it, so the handoff works there too. The exchange is
 //! one line each way, a JSON request naming absolute paths and `ok`, and the running app opens the
 //! paths exactly as File ▸ Open would. A `--combine` launch (File Explorer's "Combine files in
-//! PdfCraft", #585, one launch per selected file) hands them over the same way with
+//! PdfKu", #585, one launch per selected file) hands them over the same way with
 //! `"combine": true`, and the running app adds them to its Combine files tab instead.
 //!
 //! Every failure falls back to the old behaviour: a launch that can't hand its files over within
@@ -49,9 +49,9 @@ const TIMEOUT: Duration = Duration::from_secs(5);
 /// What this launch should do.
 #[cfg_attr(not(any(windows, all(unix, not(target_os = "macos")))), allow(dead_code))]
 pub enum Claim {
-    /// The running PdfCraft took the files: exit without a window.
+    /// The running PdfKu took the files: exit without a window.
     HandedOff,
-    /// This is the first PdfCraft: open a window and accept later launches' files.
+    /// This is the first PdfKu: open a window and accept later launches' files.
     Primary(Server),
     /// Open a window of its own and accept nothing (the behaviour before #282).
     Alone,
@@ -67,7 +67,7 @@ struct Inbox {
     wake: Option<Box<dyn Fn() + Send>>,
 }
 
-/// The first PdfCraft's end of the socket. A background thread accepts launches until the
+/// The first PdfKu's end of the socket. A background thread accepts launches until the
 /// process exits; the UI picks their files up through [`Server::connect`].
 pub struct Server {
     inbox: Arc<Mutex<Inbox>>,
@@ -186,7 +186,7 @@ pub fn claim(files: &[String], may_hand_off: bool, combine: bool) -> Claim {
     }
 }
 
-/// The socket in `%LOCALAPPDATA%\PdfCraft` (beside the crash-recovery folder); none when
+/// The socket in `%LOCALAPPDATA%\PdfKu` (beside the crash-recovery folder); none when
 /// `%LOCALAPPDATA%` is unset.
 #[cfg(windows)]
 fn socket_path() -> Option<std::path::PathBuf> {
@@ -196,7 +196,7 @@ fn socket_path() -> Option<std::path::PathBuf> {
     // own name so it never hands files to an installed copy (which keeps its settings elsewhere).
     // Never the portable folder itself: it may sit where other accounts can write (`C:\Tools`).
     let name = if pdfcraft_ui_egui::portable::data_dir().is_some() { format!("portable-{name}") } else { name };
-    std::env::var_os("LOCALAPPDATA").filter(|v| !v.is_empty()).map(|d| std::path::PathBuf::from(d).join("PdfCraft").join(name))
+    std::env::var_os("LOCALAPPDATA").filter(|v| !v.is_empty()).map(|d| std::path::PathBuf::from(d).join("PdfKu").join(name))
 }
 
 /// The socket in `$XDG_RUNTIME_DIR/pdfcraft`; none when `$XDG_RUNTIME_DIR` is unset. Never `/tmp`
@@ -289,12 +289,12 @@ fn claim_at(path: &std::path::Path, files: &[String], may_hand_off: bool, combin
                 return match hand_off(&stream, files, combine) {
                     Ok(()) => Claim::HandedOff,
                     Err(e) => {
-                        log::warn!("couldn't hand the files to the running PdfCraft ({e}); opening a new window");
+                        log::warn!("couldn't hand the files to the running PdfKu ({e}); opening a new window");
                         Claim::Alone
                     }
                 };
             }
-            // Nobody is listening: no socket yet, or one left by a PdfCraft that didn't exit
+            // Nobody is listening: no socket yet, or one left by a PdfKu that didn't exit
             // cleanly (connecting to it is refused). Clear it and become the first. Removed
             // without asking `path.exists()` first: on Windows that follows the socket's reparse
             // point, which can fail, and a leftover socket would then block every later start.
@@ -340,7 +340,7 @@ fn hand_off(stream: &UnixStream, files: &[String], combine: bool) -> std::io::Re
     writer.write_all(request(files, combine).as_bytes())?;
     let mut reply = String::new();
     std::io::BufReader::new(stream.take(16)).read_line(&mut reply)?;
-    if reply == "ok\n" { Ok(()) } else { Err(std::io::Error::other("the running PdfCraft didn't confirm")) }
+    if reply == "ok\n" { Ok(()) } else { Err(std::io::Error::other("the running PdfKu didn't confirm")) }
 }
 
 /// Accept launches on a background thread for as long as the process runs.

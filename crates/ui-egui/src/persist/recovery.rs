@@ -168,8 +168,8 @@ impl RecoveryStore {
     }
 
     /// `Recovery` in the portable data folder in portable mode ([`crate::portable`]), otherwise
-    /// the platform's per-user data folder: `~/Library/Application Support/PdfCraft/Recovery`
-    /// (macOS), `%LOCALAPPDATA%\PdfCraft\Recovery` (Windows), or
+    /// the platform's per-user data folder: `~/Library/Application Support/PdfKu/Recovery`
+    /// (macOS), `%LOCALAPPDATA%\PdfKu\Recovery` (Windows), or
     /// `$XDG_DATA_HOME/pdfcraft/recovery` / `~/.local/share/pdfcraft/recovery` (others).
     pub fn default_dir() -> Option<PathBuf> {
         if let Some(dir) = crate::portable::data_dir() {
@@ -177,9 +177,9 @@ impl RecoveryStore {
         }
         let env = |k: &str| std::env::var_os(k).filter(|v| !v.is_empty()).map(PathBuf::from);
         if cfg!(target_os = "macos") {
-            env("HOME").map(|h| h.join("Library/Application Support/PdfCraft/Recovery"))
+            env("HOME").map(|h| h.join("Library/Application Support/PdfKu/Recovery"))
         } else if cfg!(windows) {
-            env("LOCALAPPDATA").map(|d| d.join("PdfCraft").join("Recovery"))
+            env("LOCALAPPDATA").map(|d| d.join("PdfKu").join("Recovery"))
         } else {
             env("XDG_DATA_HOME").or_else(|| env("HOME").map(|h| h.join(".local/share"))).map(|d| d.join("pdfcraft/recovery"))
         }
@@ -192,7 +192,7 @@ impl RecoveryStore {
 
 /// The OCR Verify screen's per-language user dictionary folder, next to the recovery store:
 /// the portable data folder's `Dictionary` in portable mode ([`crate::portable`]), otherwise
-/// `…/PdfCraft/Dictionary` in the platform's per-user data folder. `None` where files are not
+/// `…/PdfKu/Dictionary` in the platform's per-user data folder. `None` where files are not
 /// kept (the web build).
 pub fn default_dictionary_dir() -> Option<PathBuf> {
     if let Some(dir) = crate::portable::data_dir() {
@@ -200,9 +200,9 @@ pub fn default_dictionary_dir() -> Option<PathBuf> {
     }
     let env = |k: &str| std::env::var_os(k).filter(|v| !v.is_empty()).map(PathBuf::from);
     if cfg!(target_os = "macos") {
-        env("HOME").map(|h| h.join("Library/Application Support/PdfCraft/Dictionary"))
+        env("HOME").map(|h| h.join("Library/Application Support/PdfKu/Dictionary"))
     } else if cfg!(windows) {
-        env("LOCALAPPDATA").map(|d| d.join("PdfCraft").join("Dictionary"))
+        env("LOCALAPPDATA").map(|d| d.join("PdfKu").join("Dictionary"))
     } else {
         env("XDG_DATA_HOME").or_else(|| env("HOME").map(|h| h.join(".local/share"))).map(|d| d.join("pdfcraft/dictionary"))
     }
@@ -316,7 +316,7 @@ impl RecoveryStore {
     }
 }
 
-/// The most a sidecar may hold. One PdfCraft writes is a name, a path and a few fields, well under
+/// The most a sidecar may hold. One PdfKu writes is a name, a path and a few fields, well under
 /// this; anything longer is not one of ours (#3923).
 const MAX_META_BYTES: u64 = 64 * 1024;
 
@@ -737,7 +737,7 @@ mod sidecar_tests {
         assert!(app.save_active(SaveTarget::InPlace));
     }
 
-    /// #3923: a sidecar longer than any PdfCraft writes is not read whole; its snapshot is
+    /// #3923: a sidecar longer than any PdfKu writes is not read whole; its snapshot is
     /// offered without metadata, so it has no path to save to.
     #[test]
     fn an_oversized_sidecar_is_not_read() {

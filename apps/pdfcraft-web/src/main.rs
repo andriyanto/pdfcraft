@@ -1,4 +1,4 @@
-//! PdfCraft in the browser. Build: `cd apps/pdfcraft-web && trunk build --release`
+//! PdfKu in the browser. Build: `cd apps/pdfcraft-web && trunk build --release`
 //! (trunk generates the JS loader; no handwritten JS — plan/execution-plan.md §1).
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
@@ -37,7 +37,7 @@ fn main() {
                                     }
                                 }
                                 Err(e) => {
-                                    eframe::web_sys::console::error_1(&format!("PdfCraft: could not fetch {url}: {e}").into());
+                                    eframe::web_sys::console::error_1(&format!("PdfKu: could not fetch {url}: {e}").into());
                                     // Shown in the app too, not only in the console (#173).
                                     if let Ok(mut q) = failed.lock() {
                                         q.push((name, e));
@@ -51,12 +51,12 @@ fn main() {
                     // prompts; ask the browser to confirm instead while a document has unsaved work or an OCR review is open (#812).
                     warn_before_unload(app.unsaved_flag.clone());
                     // Host modes (`host` below, over `craft-web-host`): `?host=parent`, a
-                    // same-origin page embedding PdfCraft in an iframe (such as the Nextcloud
+                    // same-origin page embedding PdfKu in an iframe (such as the Nextcloud
                     // app), or `data-host="page"` on the canvas, a host that runs the module in
                     // its own document.
                     if let Some(bridge) = app_canvas().as_ref().and_then(host::Bridge::connect) {
                         // `?author=`: the host's name for the user signs their comments,
-                        // unless they chose a name in PdfCraft (the web default is "Guest").
+                        // unless they chose a name in PdfKu (the web default is "Guest").
                         if let Some(author) = query_param("author").map(|a| a.trim().to_string()).filter(|a| !a.is_empty())
                             && app.comment_prefs.author == "Guest"
                         {
@@ -68,7 +68,7 @@ fn main() {
                         bridge.post_ready();
                     } else if query_param("host").as_deref() == Some("parent") {
                         eframe::web_sys::console::warn_1(
-                            &"PdfCraft: ?host=parent needs a framing page on the same origin; saves download instead".into(),
+                            &"PdfKu: ?host=parent needs a framing page on the same origin; saves download instead".into(),
                         );
                     }
                     // `?control`: `window.pdfcraft`, the page's command API (`api`). Opt-in: the control
@@ -130,16 +130,16 @@ fn app_canvas() -> Option<web_sys::HtmlCanvasElement> {
     web_sys::window()?.document()?.get_element_by_id("pdfcraft").and_then(|e| e.dyn_into::<web_sys::HtmlCanvasElement>().ok())
 }
 
-/// Host modes: how the page embedding PdfCraft passes files in and takes saves back. The messages
+/// Host modes: how the page embedding PdfKu passes files in and takes saves back. The messages
 /// and the two transports are `craft-web-host`'s (storytold/craft-libs), the same contract as the
-/// other Craft apps' bridges, with the `pdfcraft:` prefix. This module is PdfCraft's part of it.
+/// other Craft apps' bridges, with the `pdfcraft:` prefix. This module is PdfKu's part of it.
 ///
-/// - `?host=parent` is the `postMessage` bridge for a same-origin page that embeds PdfCraft in an
+/// - `?host=parent` is the `postMessage` bridge for a same-origin page that embeds PdfKu in an
 ///   iframe (such as the Nextcloud app). With a parent on another origin there is no bridge: the
 ///   app runs as if unframed and saves download (#2167). `data-host="page"` on the app's canvas
 ///   is for a host that loads the module into its own document, with no iframe: the same messages
 ///   travel as DOM `CustomEvent`s on that canvas. `?host=parent` wins when both are present.
-/// - `pdfcraft:ready` once the app is listening; send files now. PdfCraft reads bytes, so it
+/// - `pdfcraft:ready` once the app is listening; send files now. PdfKu reads bytes, so it
 ///   says `file: false` and a host sends `bytes`.
 /// - `pdfcraft:open` (from the host): `{ name, bytes }` holding a PDF. It opens in a tab, like a
 ///   `?file=` URL; a file over [`host::MAX_OPEN_BYTES`] is refused before it is copied.
@@ -168,7 +168,7 @@ mod host {
     }
 
     impl Bridge {
-        /// The bridge for this page, or `None` when PdfCraft isn't hosted: no `?host=parent` and
+        /// The bridge for this page, or `None` when PdfKu isn't hosted: no `?host=parent` and
         /// no `data-host="page"` on the canvas, an unframed `?host=parent` page, or a parent on
         /// another origin (messages only go to this origin, so the browser would drop every save
         /// without an error while the document showed as saved, #2167).
@@ -218,13 +218,13 @@ mod host {
     fn queue_open(name: &str, data: &FileData, inbox: &pdfcraft_ui_egui::Inbox, ctx: &egui::Context) {
         let name = if name == "document" { DEFAULT_NAME } else { name }.to_string();
         let FileData::Bytes(view) = data else {
-            eframe::web_sys::console::warn_1(&format!("PdfCraft: host file {name} came as a File; PdfCraft reads bytes only; not opened").into());
+            eframe::web_sys::console::warn_1(&format!("PdfKu: host file {name} came as a File; PdfKu reads bytes only; not opened").into());
             return;
         };
         // A file from the host is untrusted input: refuse an oversized one before copying it into the app's memory.
         if data.size() > MAX_OPEN_BYTES as f64 {
             eframe::web_sys::console::warn_1(
-                &format!("PdfCraft: host file is {} bytes, over the {} MiB host open limit; not opened", data.size(), MAX_OPEN_BYTES >> 20).into(),
+                &format!("PdfKu: host file is {} bytes, over the {} MiB host open limit; not opened", data.size(), MAX_OPEN_BYTES >> 20).into(),
             );
             return;
         }

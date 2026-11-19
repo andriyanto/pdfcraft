@@ -27,7 +27,7 @@ const MAX_STDERR: u64 = 256 * 1024;
 /// is truncated at the cap — corrupt or runaway output must not become unbounded memory in
 /// the word list, the text layer and the review UI.
 pub const MAX_WORDS: usize = 50_000;
-/// Tesseract's code for each language PdfCraft offers (ISO 639-1 → tessdata name). Only these
+/// Tesseract's code for each language PdfKu offers (ISO 639-1 → tessdata name). Only these
 /// codes ever reach the process, whatever the settings say.
 pub const LANGUAGE_CODES: &[(&str, &str)] = &[
     ("en", "eng"),
