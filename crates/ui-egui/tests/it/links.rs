@@ -1,5 +1,5 @@
-//! Community links: the Discord button is one click away everywhere; Help menu, About dialog and
-//! home screen open the ArtCraft and PdfKu pages.
+//! Project links: the Help menu, the About dialog and the home screen open PdfKu's own pages, and
+//! nothing in the app points at the project it was copied from.
 
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
@@ -17,25 +17,28 @@ fn harness(setup: impl FnOnce(&mut PdfCraftApp) + 'static) -> Harness<'static, P
     h
 }
 
+/// PdfKu is its own project: the brand, the chat server and the site of the project it started
+/// from are not its to show (their licence says a modified version must remove them).
 #[test]
-fn discord_button_in_the_top_bar_opens_discord() {
-    let mut h = harness(|_| {});
-    h.get_by_label("Discord").click();
-    h.run_steps(2);
-    assert_eq!(h.state().last_opened_url.as_deref(), Some(links::DISCORD));
-    assert_eq!(links::DISCORD, "https://discord.gg/artcraft");
+fn nothing_points_at_the_project_pdfku_was_copied_from() {
+    for l in links::LINKS {
+        assert!(l.url.starts_with("https://github.com/andriyanto/pdfku"), "{}", l.url);
+    }
+    let h = harness(|_| {});
+    for gone in ["Discord", "Join our Discord", "ArtCraft", "ArtCraft website", "Join the ArtCraft community"] {
+        assert!(h.query_by_label(gone).is_none(), "{gone} is still on the home screen");
+    }
 }
 
 #[test]
 fn home_screen_links() {
     for (label, url) in [
-        ("Join our Discord", links::DISCORD),
-        ("PdfKu web page", "https://github.com/andriyanto/pdfku#readme"),
         ("PdfKu on GitHub", "https://github.com/andriyanto/pdfku"),
-        ("ArtCraft website", "https://getartcraft.com"),
+        ("PdfKu web page", "https://github.com/andriyanto/pdfku#readme"),
+        ("Report a problem", "https://github.com/andriyanto/pdfku/issues"),
     ] {
         let mut h = harness(|_| {});
-        h.get_by_label("Join the ArtCraft community");
+        h.get_by_label("PdfKu is open source");
         h.get_by_label(label).click();
         h.run_steps(2);
         assert_eq!(h.state().last_opened_url.as_deref(), Some(url), "{label}");
@@ -45,28 +48,29 @@ fn home_screen_links() {
 #[test]
 fn home_community_card_closes_for_this_run() {
     let mut h = harness(|_| {});
-    h.get_by_label("Join the ArtCraft community");
+    h.get_by_label("PdfKu is open source");
     h.get_by_label("Close").click();
     h.run_steps(2);
     assert!(h.state().community_card_closed);
-    assert!(h.query_by_label("Join the ArtCraft community").is_none());
-    assert!(h.query_by_label("Join our Discord").is_none());
+    assert!(h.query_by_label("PdfKu is open source").is_none());
+    assert!(h.query_by_label("Report a problem").is_none());
     // Not remembered: a fresh app shows the card again.
     assert!(!PdfCraftApp::new().community_card_closed);
 }
 
 #[test]
-fn about_dialog_shows_the_brand_and_links() {
+fn about_dialog_shows_the_app_and_its_links() {
     let pdf = b"%PDF-1.7\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF";
     // With a document open, so the home screen's own links are not on screen.
     let mut h = harness(move |app| {
         app.open_bytes("one.pdf", None, pdf.to_vec()).unwrap();
         app.dialog = Some(Dialog::About);
     });
-    assert!(h.query_all_by_label("ArtCraft").count() >= 2, "the mark and the wordmark (alt text)");
-    h.get_by_label("Join our Discord").click();
+    assert!(h.query_all_by_label("PdfKu").count() >= 2, "the icon (alt text) and the name");
+    assert!(h.query_by_label("ArtCraft").is_none(), "the brand of the project PdfKu was copied from is gone");
+    h.get_by_label("Report a problem").click();
     h.run_steps(2);
-    assert_eq!(h.state().last_opened_url.as_deref(), Some(links::DISCORD));
+    assert_eq!(h.state().last_opened_url.as_deref(), Some(links::ISSUES));
 }
 
 #[test]
