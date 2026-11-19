@@ -232,6 +232,9 @@ impl Default for View {
 /// About ▸ Contributors: a name toggle, a sort, and the list as a grab bag or a table.
 pub fn contributors_ui(ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
+    // The list below credits the people who made the project PdfKu is modified from.
+    crate::widgets::modification_note(ui);
+    ui.add_space(4.0);
     let id = egui::Id::unique("credits_view");
     let mut v = ui.data_mut(|d| d.get_temp::<View>(id)).unwrap_or_default();
     ui.horizontal_wrapped(|ui| {
