@@ -2,7 +2,7 @@
 .SYNOPSIS
   Check the compiled MSI's install scope, publisher, shortcuts, native UI and OCR models, without installing it.
 .EXAMPLE
-  pwsh packaging/windows/test-msi.ps1 dist/release/pdfcraft-0.2.1-windows-x64.msi
+  pwsh packaging/windows/test-msi.ps1 dist/release/pdfku-0.2.1-windows-x64.msi
 #>
 param(
   [Parameter(Mandatory)] [string] $Path,
@@ -73,7 +73,7 @@ $status = Read-Row 'SELECT `Text` FROM `Control` WHERE `Dialog_` = ''InstallProg
 Assert-Equal $status[0] 'Please wait while setup completes.' 'Persistent progress message'
 Assert-NoRow 'SELECT `Event` FROM `EventMapping` WHERE `Dialog_` = ''InstallProgress'' AND `Control_` = ''Status''' 'progress text subscription'
 
-# Plain (non-advertised) shortcuts to pdfcraft.exe, each in its own component and with no Icon
+# Plain (non-advertised) shortcuts to pdfku.exe, each in its own component and with no Icon
 # table entry, so the shell takes the exe's own icon and a pin keeps it across updates. The
 # desktop one is gated by INSTALLDESKTOPSHORTCUT, which is secure so the UI choice reaches the
 # elevated install.
@@ -220,7 +220,7 @@ if (($secure[0] -split ';') -notcontains 'INSTALLIMAGECONTEXTMENU') { throw "INS
 
 # PDF context menu (#682): "Edit with PdfKu" opens the file in PdfKu. Its own component, gated
 # by INSTALLPDFCONTEXTMENU (on for a first install, kept on update only while present, secure, welcome
-# checkbox), with its menu value as key path so uninstall removes it. Several selected PDFs each start pdfcraft.exe "%1" (Document), which the
+# checkbox), with its menu value as key path so uninstall removes it. Several selected PDFs each start pdfku.exe "%1" (Document), which the
 # single-instance hand-off opens as tabs. The .pdf default is never set, so the user's default app
 # stays.
 $pdfKey = 'Software\Classes\SystemFileAssociations\.pdf\shell\PdfKu.Edit'
@@ -250,7 +250,7 @@ $pdfChecked = Read-Row 'SELECT `Value` FROM `CheckBox` WHERE `Property` = ''INST
 Assert-Equal $pdfChecked[0] '1' 'Welcome PDF context-menu value'
 Assert-NoRow 'SELECT `Registry` FROM `Registry` WHERE `Key` = ''Software\Classes\.pdf'' AND `Name` IS NULL' '.pdf default app'
 # "Combine files in PdfKu" (#585): in the PDF menu's component, so the one switch covers both
-# verbs. Each selected file starts `pdfcraft --combine "<file>"` (Document), and the running
+# verbs. Each selected file starts `pdfku --combine "<file>"` (Document), and the running
 # PdfKu collects them into its Combine files tab.
 $combineKey = 'Software\Classes\SystemFileAssociations\.pdf\shell\PdfKu.Combine'
 $combineMenu = Read-Row ('SELECT `Value`, `Component_`, `Root` FROM `Registry` WHERE `Key` = ''' + $combineKey + ''' AND `Name` IS NULL') 3
@@ -305,7 +305,7 @@ foreach ($exit in @(@('InstallComplete', '-1'), @('InstallCancelled', '-2'), @('
 }
 $title = Read-Row 'SELECT `Text` FROM `Control` WHERE `Dialog_` = ''InstallComplete'' AND `Control` = ''Title''' 1
 if ($title[0] -notmatch 'completed successfully') { throw 'Success dialog does not confirm completion' }
-# OCR models (#103): installed into models\ beside pdfcraft.exe, where the app looks for them.
+# OCR models (#103): installed into models\ beside pdfku.exe, where the app looks for them.
 $modelsDir = Read-Row 'SELECT `Directory_Parent`, `DefaultDir` FROM `Directory` WHERE `Directory` = ''ModelsFolder''' 2
 Assert-Equal $modelsDir[0] 'INSTALLFOLDER' 'OCR models folder parent'
 # DefaultDir is `models`, or `SHORT|models` with a generated 8.3 name.

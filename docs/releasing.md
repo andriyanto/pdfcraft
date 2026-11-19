@@ -44,13 +44,13 @@ published (`gh workflow run release.yml --ref <branch>`).
 
 | Platform | Artifacts | Built on |
 |---|---|---|
-| macOS 11+ (universal: Apple silicon + Intel) | `pdfcraft-<v>-macos-universal.dmg`, `pdfcraft-cli-<v>-macos-universal.zip` | `macos-15` |
+| macOS 11+ (universal: Apple silicon + Intel) | `pdfcraft-<v>-macos-universal.dmg`, `pdfku-cli-<v>-macos-universal.zip` | `macos-15` |
 | Windows 10+ x64 | `pdfcraft-<v>-windows-x64.msi`, `pdfcraft-<v>-windows-x64-portable.zip` | `windows-latest` |
 | Windows 10+ x86 (32-bit) | `pdfcraft-<v>-windows-x86.msi`, `pdfcraft-<v>-windows-x86-portable.zip` | `windows-latest` |
 | Windows 11 on ARM64 | `pdfcraft-<v>-windows-arm64.msi`, `pdfcraft-<v>-windows-arm64-portable.zip` | `windows-latest` (cross-compiled) |
-| Linux x86_64 | `pdfcraft-<v>-linux-x86_64.{AppImage,AppImage.zsync,deb,rpm,tar.gz}`, `pdfcraft-cli-<v>-linux-x86_64.tar.gz` | `ubuntu-22.04` |
-| Linux aarch64 | `pdfcraft-<v>-linux-aarch64.{AppImage,AppImage.zsync,deb,rpm,tar.gz}`, `pdfcraft-cli-<v>-linux-aarch64.tar.gz` | `ubuntu-22.04-arm` |
-| Linux riscv64 | `pdfcraft-<v>-linux-riscv64.tar.gz`, `pdfcraft-cli-<v>-linux-riscv64.tar.gz` (glibc 2.39+) | `ubuntu-24.04` (cross-compiled; CLI smoke-tested under QEMU) |
+| Linux x86_64 | `pdfcraft-<v>-linux-x86_64.{AppImage,AppImage.zsync,deb,rpm,tar.gz}`, `pdfku-cli-<v>-linux-x86_64.tar.gz` | `ubuntu-22.04` |
+| Linux aarch64 | `pdfcraft-<v>-linux-aarch64.{AppImage,AppImage.zsync,deb,rpm,tar.gz}`, `pdfku-cli-<v>-linux-aarch64.tar.gz` | `ubuntu-22.04-arm` |
+| Linux riscv64 | `pdfcraft-<v>-linux-riscv64.tar.gz`, `pdfku-cli-<v>-linux-riscv64.tar.gz` (glibc 2.39+) | `ubuntu-24.04` (cross-compiled; CLI smoke-tested under QEMU) |
 | Flatpak x86_64 | `pdfcraft-<v>-linux-x86_64.flatpak` | `ubuntu-24.04` (repackages the Linux tarball) |
 | Flatpak aarch64 | `pdfcraft-<v>-linux-aarch64.flatpak` | `ubuntu-24.04-arm` (repackages the Linux tarball) |
 | FreeBSD 14 x86_64 | `pdfcraft-<v>-freebsd-x86_64.tar.gz` | FreeBSD VM on `ubuntu-latest` |
@@ -59,7 +59,7 @@ published (`gh workflow run release.yml --ref <branch>`).
 The ARM64 Windows build is cross-compiled on the x64 runner, so signing and WiX work as for the
 other Windows builds; `.github/workflows/windows-arm64.yml` installs and runs it on ARM64 hardware.
 
-Every binary reports its version (`pdfcraft --version`, `pdfcraft-cli --version`, *Help ▸ About*).
+Every binary reports its version (`pdfku --version`, `pdfku-cli --version`, *Help ▸ About*).
 The workflow sets `PDFCRAFT_BUILD_SHA` and `PDFCRAFT_BUILD_DATE` (`packaging/env.sh` fills them in
 for local builds): the commit is recorded in the macOS `Info.plist` (`PdfCraftBuildCommit`) and the
 date in the AppStream metadata. The binaries don't embed the commit yet.
@@ -81,7 +81,7 @@ Discovery never combines model formats or files from different directories.
 Directory precedence stays the same: `$PDFCRAFT_MODELS`, the release-package locations beside the executable, then the source tree's `assets/models/`.
 The first directory with a complete supported pair wins, even if an earlier legacy pair precedes a later ONNX pair.
 
-The release-package locations are `models\` beside `pdfcraft.exe` (MSI, portable zip), `PdfCraft.app/Contents/Resources/models` (macOS), and `share/pdfcraft/models` beside `bin/` (deb, rpm, tar.gz, AppImage, Flatpak, FreeBSD).
+The release-package locations are `models\` beside `pdfku.exe` (MSI, portable zip), `PdfCraft.app/Contents/Resources/models` (macOS), and `share/pdfcraft/models` beside `bin/` (deb, rpm, tar.gz, AppImage, Flatpak, FreeBSD).
 The web build does not include these models, and OCR remains limited to the Latin alphabet without accents.
 
 ### macOS
@@ -101,7 +101,7 @@ from Preview). Files opened from Finder arrive as Apple events, which
   Its Finder window (background, icon size and positions) comes from
   [`packaging/macos/dmg/`](../packaging/macos/dmg/README.md), and its volume is named `PdfCraft`
   without the version, which the window's background needs; the DMG file name keeps the version.
-- **CLI:** `pdfcraft-cli` is signed and notarized as a zip. A bare executable can't hold a stapled
+- **CLI:** `pdfku-cli` is signed and notarized as a zip. A bare executable can't hold a stapled
   ticket, so Gatekeeper looks it up online the first time a downloaded copy runs.
 
 Without certificates (locally) the script signs ad-hoc and skips notarization:
@@ -116,13 +116,13 @@ packaging/macos/package.sh --arch aarch64     # quicker, host-only; --arch unive
 neither the MSI nor the portable zip needs the Visual C++ redistributable.
 
 - Before packaging, it reads both executables' PE headers: the machine type must match `-Arch`, and
-  `pdfcraft.exe` must be a GUI-subsystem program (no console window, #57) while `pdfcraft-cli.exe`
+  `pdfku.exe` must be a GUI-subsystem program (no console window, #57) while `pdfku-cli.exe`
   stays a console program.
 - `pdfcraft.wxs` (WiX v5) is a dual-scope package (per-user by default into
   `%LOCALAPPDATA%\Programs\Produktivitas\PdfKu`, per-machine into `Program Files\Produktivitas\PdfKu` (`Program Files (x86)` for the 32-bit build),
   see `packaging/windows/INSTALLATION.md`) with a Start Menu shortcut, a
   desktop shortcut (on by default) and an App Paths entry. Both shortcuts are plain links to
-  `pdfcraft.exe`, not advertised MSI shortcuts (#107, #143). The MSI version is the numeric `X.Y.Z`
+  `pdfku.exe`, not advertised MSI shortcuts (#107, #143). The MSI version is the numeric `X.Y.Z`
   (MSI has no pre-release field), and same-version upgrades are allowed so release candidates replace
   each other. Icon ids end in `.ico` or `.exe` (Windows Installer requires it); packaging-lint checks
   this.
@@ -148,11 +148,11 @@ neither the MSI nor the portable zip needs the Visual C++ redistributable.
 - The PDF right-click entry (#682) is a classic verb under
   `HKLM\Software\Classes\SystemFileAssociations\.pdf\shell\PdfCraft.Edit`, so it shows whichever app
   is the default for `.pdf` and never changes that default. Several selected PDFs (up to 15, the
-  limit for a `Document` verb) start one `pdfcraft.exe "<file>"` each, and the single-instance
+  limit for a `Document` verb) start one `pdfku.exe "<file>"` each, and the single-instance
   hand-off opens them as tabs. On Windows 11 it is under "Show more options"; a first-level entry
   needs an `IExplorerCommand` handler and package identity (a sparse MSIX package), which the MSI
   doesn't have. "Combine files in PdfCraft" (#585) is a second verb in the same component,
-  `PdfCraft.Combine`, running `pdfcraft --combine "<file>"` once per selected file; the
+  `PdfCraft.Combine`, running `pdfku --combine "<file>"` once per selected file; the
   single-instance hand-off sends them with `"combine": true`, and the running app adds them to
   its Combine files tab (`OsEvent::Combine`). Both verbs come and go with `INSTALLPDFCONTEXTMENU`.
 - The image right-click entry (#190) is the same kind of verb, `PdfCraft.CreatePdf`, for ten image
@@ -162,10 +162,10 @@ neither the MSI nor the portable zip needs the Visual C++ redistributable.
 - `test-msi.ps1 <file.msi>` checks the compiled shortcut, context-menu and dialog tables, and
   evaluates the first-install and update conditions of the desktop shortcut and both menus. Packaging
   runs it in a child process before signing, so the MSI isn't held open when signtool runs. The ARM64 install
-  smoke test checks that both all-users shortcuts point at the installed `pdfcraft.exe` and are
+  smoke test checks that both all-users shortcuts point at the installed `pdfku.exe` and are
   removed on uninstall, and that `INSTALLDESKTOPSHORTCUT=0` skips the desktop one.
 - The portable zip holds both executables, the README, the licences, the OFL licence of each
-  embedded craft-fonts family, and `portable.txt`. That marker beside `pdfcraft.exe` keeps the
+  embedded craft-fonts family, and `portable.txt`. That marker beside `pdfku.exe` keeps the
   settings, logs, crash recovery and new digital IDs in `PdfCraftData\` next to the exe instead of
   `%APPDATA%` and `%LOCALAPPDATA%` (`crates/ui-egui/src/platform/portable.rs`). The MSI carries the same
   OFL notices; `-SkipBuild` requires `CRAFT_FONTS_DIR` so they can be staged, or
@@ -191,7 +191,7 @@ Locally: `dotnet tool install -g wix --version 5.0.2`, then `pwsh packaging/wind
 AppStream metainfo) and makes every format from it: an **AppImage** (any distribution, nothing to
 install), a **.deb** and an **.rpm** (built with [nfpm](https://nfpm.goreleaser.com) from
 `nfpm.yaml`; they integrate with the menu, MIME and icon caches), a **.tar.gz**, and a CLI-only
-**`pdfcraft-cli-<v>-linux-<arch>.tar.gz`** (the stripped `pdfcraft-cli` plus the licences and
+**`pdfku-cli-<v>-linux-<arch>.tar.gz`** (the stripped `pdfku-cli` plus the licences and
 README, for servers, CI and agent sandboxes). `--formats` picks a subset (`appimage deb rpm tar cli`).
 
 The binaries are built on Ubuntu 22.04, the oldest GitHub-hosted image, so they need only
@@ -208,7 +208,7 @@ otherwise; the release job checks both.
 
 **Flatpak:** the `flatpak` job turns each arch's tarball into a single-file bundle with
 `packaging/linux/flatpak-bundle.sh` and `flatpak/ai.storyteller.pdfcraft.bundle.yml` (no Rust build;
-the same binaries), then installs it and runs `pdfcraft-cli --version` in the sandbox.
+the same binaries), then installs it and runs `pdfku-cli --version` in the sandbox.
 `flatpak/ai.storyteller.pdfcraft.yml` is the from-source manifest for a later Flathub submission;
 packaging-lint keeps the runtime and sandbox permissions (`finish-args`) of the two identical.
 Printing is not available in the Flatpak yet: it runs `lp`, which the freedesktop runtime lacks
@@ -278,7 +278,7 @@ a match of the `CobaltStrikeBeacon` family rule.
    bundles neither, and the helper never runs in the app, the installer or CI:
 
    ```powershell
-   pwsh packaging/windows/security-audit.ps1 -Path .\pdfcraft.exe, .\pdfcraft-cli.exe -YaraExe C:\tools\yara64.exe -YaraRule C:\rules\CobaltStrikeBeacon.yar
+   pwsh packaging/windows/security-audit.ps1 -Path .\pdfku.exe, .\pdfku-cli.exe -YaraExe C:\tools\yara64.exe -YaraRule C:\rules\CobaltStrikeBeacon.yar
    ```
 
    The output lists each matched identifier with its offset, and the SHA-256 of the rule file.

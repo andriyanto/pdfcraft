@@ -813,11 +813,11 @@ mod tests {
         let layouts = [
             ("windows", "PdfKu", "PdfKu/models"),
             ("macos", "PdfKu.app/Contents/MacOS", "PdfKu.app/Contents/Resources/models"),
-            ("linux-deb-rpm", "usr/bin", "usr/share/pdfcraft/models"),
-            ("linux-tar", "pdfcraft-1.0.0-linux-x86_64/bin", "pdfcraft-1.0.0-linux-x86_64/share/pdfcraft/models"),
-            ("appimage", "PdfKu.AppDir/usr/bin", "PdfKu.AppDir/usr/share/pdfcraft/models"),
-            ("flatpak", "app/bin", "app/share/pdfcraft/models"),
-            ("freebsd", "usr/local/bin", "usr/local/share/pdfcraft/models"),
+            ("linux-deb-rpm", "usr/bin", "usr/share/pdfku/models"),
+            ("linux-tar", "pdfku-1.0.0-linux-x86_64/bin", "pdfku-1.0.0-linux-x86_64/share/pdfku/models"),
+            ("appimage", "PdfKu.AppDir/usr/bin", "PdfKu.AppDir/usr/share/pdfku/models"),
+            ("flatpak", "app/bin", "app/share/pdfku/models"),
+            ("freebsd", "usr/local/bin", "usr/local/share/pdfku/models"),
         ];
         for (name, exe_dir, models_dir) in layouts {
             let root = base.join(name);

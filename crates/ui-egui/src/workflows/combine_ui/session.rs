@@ -401,7 +401,7 @@ impl PdfCraftApp {
         let _ = recursive;
     }
 
-    /// Add the files at `paths` to the Combine files list and show it: `pdfcraft --combine` and
+    /// Add the files at `paths` to the Combine files list and show it: `pdfku --combine` and
     /// File Explorer's "Combine files in PdfKu" (#585), where each selected file arrives as a
     /// launch of its own and the running PdfKu collects them here. Nothing to add shows the
     /// tab all the same.

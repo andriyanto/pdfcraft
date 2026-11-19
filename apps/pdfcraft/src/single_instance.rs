@@ -1,8 +1,8 @@
 //! One PdfKu per Windows sign-in or Linux/BSD display: a launch that only names files hands them
 //! to the PdfKu that is already running, where they open as tabs, and exits (#282, #317, #1726).
 //!
-//! Outlook attachments, Explorer double-clicks and Open With all start `pdfcraft.exe "<file>"`, and
-//! a file manager or `xdg-open` starts `pdfcraft <file>` the same way, so until now every file got
+//! Outlook attachments, Explorer double-clicks and Open With all start `pdfku.exe "<file>"`, and
+//! a file manager or `xdg-open` starts `pdfku <file>` the same way, so until now every file got
 //! its own process and window. The first PdfKu listens on a Unix domain socket. On Windows (10
 //! 1803 and later) it is in `%LOCALAPPDATA%\PdfKu` (a portable copy's too, as
 //! `portable-instance-…` and never in its own folder, #889) and is named after the Windows
@@ -207,7 +207,7 @@ fn socket_path() -> Option<std::path::PathBuf> {
     let name = display_socket_name(var("WAYLAND_DISPLAY").or_else(|| var("DISPLAY")).as_deref());
     // The XDG base directory spec makes it the user's own (mode 0700), so the folder inside it is
     // out of other accounts' reach whatever the umask.
-    var("XDG_RUNTIME_DIR").map(|d| std::path::PathBuf::from(d).join("pdfcraft").join(name))
+    var("XDG_RUNTIME_DIR").map(|d| std::path::PathBuf::from(d).join("pdfku").join(name))
 }
 
 /// The socket's file name for a display (`WAYLAND_DISPLAY`, else `DISPLAY`): a launch opens its

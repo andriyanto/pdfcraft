@@ -1,27 +1,27 @@
 [
   {
-    "crate": "pdfcraft-cli",
+    "crate": "pdfku-cli",
     "name": "hyper",
     "reachable": true,
-    "path": "pdfcraft-cli -> pdfcraft-engine -> pdfcraft-print -> craft-print -> winprint -> reqwest -> hyper"
+    "path": "pdfku-cli -> pdfcraft-engine -> pdfcraft-print -> craft-print -> winprint -> reqwest -> hyper"
   },
   {
-    "crate": "pdfcraft-cli",
+    "crate": "pdfku-cli",
     "name": "reqwest",
     "reachable": true,
-    "path": "pdfcraft-cli -> pdfcraft-engine -> pdfcraft-print -> craft-print -> winprint -> reqwest"
+    "path": "pdfku-cli -> pdfcraft-engine -> pdfcraft-print -> craft-print -> winprint -> reqwest"
   },
   {
-    "crate": "pdfcraft-cli",
+    "crate": "pdfku-cli",
     "name": "socket2",
     "reachable": true,
-    "path": "pdfcraft-cli -> pdfcraft-engine -> pdfcraft-print -> craft-print -> winprint -> reqwest -> hyper-util -> socket2"
+    "path": "pdfku-cli -> pdfcraft-engine -> pdfcraft-print -> craft-print -> winprint -> reqwest -> hyper-util -> socket2"
   },
   {
-    "crate": "pdfcraft-cli",
+    "crate": "pdfku-cli",
     "name": "tokio",
     "reachable": true,
-    "path": "pdfcraft-cli -> pdfcraft-engine -> pdfcraft-print -> craft-print -> winprint -> reqwest -> tokio"
+    "path": "pdfku-cli -> pdfcraft-engine -> pdfcraft-print -> craft-print -> winprint -> reqwest -> tokio"
   },
   {
     "crate": "pdfcraft-automation",

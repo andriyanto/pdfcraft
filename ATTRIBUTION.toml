@@ -2676,7 +2676,7 @@ source = "Contributor-original (see assets/app-icon/README.md)"
 licence = "MIT OR Apache-2.0"
 licence_file = "assets/app-icon/LICENSE.txt"
 kind = "icon"
-usage = "Embedded in pdfcraft.exe by apps/pdfcraft/build.rs (Explorer, taskbar, Start menu, Alt-Tab)"
+usage = "Embedded in pdfku.exe by apps/pdfcraft/build.rs (Explorer, taskbar, Start menu, Alt-Tab)"
 sha256 = "8473a9972bbb49f83f6b7151fa5aab24e3b0171f7af3d8e20c3721c2b9cce695"
 
 [[asset]]
@@ -2698,7 +2698,7 @@ source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icon
 licence = "ISC AND (MIT OR Apache-2.0)"
 licence_file = "assets/app-icon/LICENSE-document.txt"
 kind = "icon"
-usage = "Embedded in pdfcraft.exe as resource 2; the Windows installer uses it for PdfCraft.Document and Applications/pdfcraft.exe PDF file associations"
+usage = "Embedded in pdfku.exe as resource 2; the Windows installer uses it for PdfCraft.Document and Applications/pdfcraft.exe PDF file associations"
 sha256 = "910be5e0ecdc94ce00368077ca1bef449bd5d62a75516feeb37884296c6fac4d"
 
 [[asset]]

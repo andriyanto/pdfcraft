@@ -1,6 +1,6 @@
 [package]
-name = "pdfcraft"
-description = "PdfCraft desktop app"
+name = "pdfku"
+description = "PdfKu desktop app"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -70,7 +70,7 @@ uds_windows = "=1.2.1"
 winit = { version = "0.30", default-features = false }
 
 [build-dependencies]
-# Icon + VERSIONINFO for pdfcraft.exe; build.rs only uses it when targeting Windows.
+# Icon + VERSIONINFO for pdfku.exe; build.rs only uses it when targeting Windows.
 winresource = "0.1"
 
 [target.'cfg(windows)'.dependencies]

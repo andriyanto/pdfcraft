@@ -11,7 +11,7 @@ pub type FailedInbox = std::sync::Arc<std::sync::Mutex<Vec<(String, String)>>>;
 pub enum OsEvent {
     /// Open these files.
     Open(Vec<String>),
-    /// Add these files to Combine files and show it (`pdfcraft --combine`, File Explorer's
+    /// Add these files to Combine files and show it (`pdfku --combine`, File Explorer's
     /// "Combine files in PdfKu", #585).
     Combine(Vec<String>),
     /// Quit (the Dock's Quit, logging out), asking about unsaved changes first.
