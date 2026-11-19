@@ -10,7 +10,7 @@ use craft_update::{CheckResultDialog, CheckResultResponse};
 use crate::PdfCraftApp;
 
 /// Where every PdfCraft release is listed.
-pub const RELEASES_PAGE: &str = "https://github.com/storytold/pdfcraft/releases";
+pub const RELEASES_PAGE: &str = "https://github.com/andriyanto/pdfcraft/releases";
 
 /// Stands in for the network in tests.
 #[cfg(not(target_arch = "wasm32"))]
@@ -317,6 +317,16 @@ mod tests {
         assert!(app.allow_quit, "the next frame closes the app");
     }
 
+    /// This repository is its own project: a build must never check, offer or download the
+    /// releases of the repository it was copied from.
+    #[test]
+    fn updates_come_from_this_repository_only() {
+        assert_eq!(crate::UPDATE_APP.repo, crate::RELEASES_REPO);
+        assert_eq!(crate::UPDATE_APP.releases_url(), RELEASES_PAGE);
+        assert!(!crate::UPDATE_APP.repo.starts_with("storytold/"), "{}", crate::UPDATE_APP.repo);
+        assert_ne!(crate::UPDATE_APP.repo, craft_update::suite::PDFCRAFT.repo);
+    }
+
     #[test]
     fn restart_to_update_with_the_startup_prompt_open_leaves_the_app_open() {
         let mut app = app(true);
@@ -324,7 +334,7 @@ mod tests {
             tag: "v99.0.0".into(),
             version: craft_update::parse_version("99.0.0"),
             name: "PdfCraft 99.0.0".into(),
-            html_url: "https://github.com/storytold/pdfcraft/releases/tag/v99.0.0".into(),
+            html_url: "https://github.com/andriyanto/pdfcraft/releases/tag/v99.0.0".into(),
             ..Default::default()
         });
         assert!(app.updates.updater.prompt_open());
