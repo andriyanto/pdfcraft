@@ -3000,26 +3000,26 @@ sha256 = "21808625578fe8d8cd10cb684be546dca077b27cd03a53a2f1ec11dc743c924c"
 
 [[asset]]
 path = "packaging/macos/dmg/background.svg"
-title = "PdfCraft macOS DMG window background"
+title = "PdfKu macOS DMG window background"
 author = "@XusBadia"
-source = "Original work for this repository, derived from the PdfCraft app icon (assets/app-icon/pdfcraft.svg, referenced via an SVG image element, not copied)"
+source = "Original work for this repository, derived from the PdfKu app icon (assets/app-icon/pdfcraft.svg, referenced via an SVG image element, not copied)"
 licence = "MIT OR Apache-2.0"
 licence_file = "assets/app-icon/LICENSE.txt"
 kind = "image"
 usage = "Finder window of the macOS DMG; rendered to background.tiff by packaging/macos/dmg/generate.py"
-sha256 = "182663e4d1c4fabbb7ab2e1f0d4e991a8e0859b4a8dee6934d3e25d77ea020af"
+sha256 = "3d5e4a034124315696af51ab99b481dd1caff5d8d8528e0e1fec3bf9cc4c4f72"
 
 
 [[asset]]
 path = "packaging/macos/dmg/background.tiff"
-title = "PdfCraft macOS DMG window background (rendered)"
+title = "PdfKu macOS DMG window background (rendered)"
 author = "@XusBadia"
 source = "Rendered from packaging/macos/dmg/background.svg by packaging/macos/dmg/generate.py"
 licence = "MIT OR Apache-2.0"
 licence_file = "assets/app-icon/LICENSE.txt"
 kind = "image"
 usage = "1x + 2x HiDPI 16-colour palette TIFF copied into the macOS DMG by packaging/macos/package.sh; includes the app icon and the free LittleCMS built-in sRGB profile"
-sha256 = "bedf1b23707b9e34157440e83f65464ff314fa9f6b1d39c7a8930d1645c2f8be"
+sha256 = "51a60263390cc990baaca157e65af1f3d51f72222aa2ddca073ef41f3d58cd58"
 
 [[fetched]]
 file = "text-detection.onnx"
