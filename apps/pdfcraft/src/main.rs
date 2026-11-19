@@ -1,4 +1,4 @@
-//! PdfCraft desktop app.
+//! PdfKu desktop app.
 //!
 //! Usage: `pdfcraft [options] [files…]` (`-h` / `--help` prints a short version of this, [`USAGE`]).
 //! `--two-paged` opens each command-line PDF in noncontinuous two-page view, without changing defaults.
@@ -13,10 +13,10 @@
 //!  --page-gaps on|off  --default-page-gaps on|off  --recent-files 0..50
 //!  --combine-view grid|list  --combine-zoom 60..200`
 //! `--combine files…` adds the files to the Combine files tab (File Explorer's "Combine files in
-//! PdfCraft", #585), of the PdfCraft already running when there is one.
+//! PdfKu", #585), of the PdfKu already running when there is one.
 //!
 //! `--new-window` opens a window of its own. Without it, on Windows, a launch that only names files
-//! hands them to the PdfCraft already running, where they open as tabs (`single_instance`).
+//! hands them to the PdfKu already running, where they open as tabs (`single_instance`).
 //!
 //! `--control <file>` enables the UI control channel (off by default): the app listens on a random
 //! loopback port and writes `{"port", "token", "pid"}` to `<file>` (owner-only permissions). The
@@ -65,13 +65,13 @@ const APP_ICON_PNG: &[u8] = include_bytes!("../../../assets/app-icon/hicolor/256
 const USAGE: &str = "\
 Usage: pdfcraft [options] [files…]
 
-Opens the files in the PdfCraft desktop app.
+Opens the files in the PdfKu desktop app.
 
 Options:
   --two-paged                 open command-line PDFs in noncontinuous two-page view
-  --new-window                open a window of its own instead of passing the files to a running PdfCraft
+  --new-window                open a window of its own instead of passing the files to a running PdfKu
   --create-images [images…]   put the images in one PDF and ask for the page DPI
-  --combine files…            add the files to the Combine files tab, of a running PdfCraft if there is one
+  --combine files…            add the files to the Combine files tab, of a running PdfKu if there is one
   --control <file>            enable the UI control channel (pdfcraft-cli ui --control <file> …)
   --page N, --zoom 150, --layout continuous, --theme dark, …
                               view settings applied once the files are open
@@ -92,10 +92,10 @@ fn print_and_exit(text: &str) -> eframe::Result {
 const LEGACY_STORAGE_KEY: &str = "printcraft";
 
 /// The preferences folder (`app.ron`, docs/development.md). In portable mode
-/// it is `PdfCraftData` beside the executable (#157). XDG desktops use the configuration base;
-/// other platforms retain eframe's PdfCraft folder. Logs and recovery stay in the data folder.
+/// it is `PdfKuData` beside the executable (#157). XDG desktops use the configuration base;
+/// other platforms retain eframe's PdfKu folder. Logs and recovery stay in the data folder.
 fn settings_dir() -> Option<std::path::PathBuf> {
-    let legacy = eframe::storage_dir("PdfCraft");
+    let legacy = eframe::storage_dir("PdfKu");
     match settings::directory(
         cfg!(all(unix, not(target_os = "macos"))),
         pdfcraft_ui_egui::portable::data_dir(),
@@ -119,11 +119,11 @@ fn migrate_legacy_folders() {
     if pdfcraft_ui_egui::portable::data_dir().is_some() {
         return;
     }
-    let mut moves = vec![(eframe::storage_dir("PrintCraft"), eframe::storage_dir("PdfCraft"))];
+    let mut moves = vec![(eframe::storage_dir("PrintCraft"), eframe::storage_dir("PdfKu"))];
     // Recovery lives in the settings folder except on Windows, where it is under %LOCALAPPDATA%.
     if cfg!(windows) {
         let local = std::env::var_os("LOCALAPPDATA").filter(|v| !v.is_empty()).map(std::path::PathBuf::from);
-        moves.push((local.as_ref().map(|d| d.join("PrintCraft")), local.map(|d| d.join("PdfCraft"))));
+        moves.push((local.as_ref().map(|d| d.join("PrintCraft")), local.map(|d| d.join("PdfKu"))));
     }
     for (old, new) in moves {
         let (Some(old), Some(new)) = (old, new) else { continue };
@@ -202,7 +202,7 @@ fn rejoin_split_paths(args: Vec<String>, exists: impl Fn(&str) -> bool) -> Vec<S
 
 fn main() -> eframe::Result {
     // Before anything uses aws-lc: an `OPENSSL_ia32cap` naming a CPU feature this processor lacks
-    // would stop it, so PdfCraft runs again without it (#2916, `crypto_env`).
+    // would stop it, so PdfKu runs again without it (#2916, `crypto_env`).
     if let Some(code) = pdfcraft_platform::crypto_env::run_without_cpu_override() {
         std::process::exit(code);
     }
@@ -217,7 +217,7 @@ fn main() -> eframe::Result {
     let logger = logging::install();
     if let Some(value) = pdfcraft_platform::crypto_env::dropped() {
         let name = pdfcraft_platform::crypto_env::IA32CAP;
-        log::warn!("{name} was set to {value}; PdfCraft started again without it (aws-lc stops on a CPU feature the processor lacks)");
+        log::warn!("{name} was set to {value}; PdfKu started again without it (aws-lc stops on a CPU feature the processor lacks)");
     }
     // Last-resort guard (AGENTS.md §4): commands, edits, opens and saves catch panics and report
     // them; this hook logs every panic, caught or not, with a backtrace when RUST_BACKTRACE is set.
@@ -254,16 +254,16 @@ fn main() -> eframe::Result {
     // no file behind) and after the PrintCraft migration (which a fresh folder would block).
     // Records logged until now are written to it first.
     if let (Some(logger), Some(dir)) =
-        (logger, pdfcraft_ui_egui::portable::data_dir().map(std::path::Path::to_path_buf).or_else(|| eframe::storage_dir("PdfCraft")))
+        (logger, pdfcraft_ui_egui::portable::data_dir().map(std::path::Path::to_path_buf).or_else(|| eframe::storage_dir("PdfKu")))
     {
         match logger.attach_dir(&dir.join("logs")) {
-            Ok(path) => log::info!("PdfCraft {}, log file {}", pdfcraft_engine::build_info::version(), path.display()),
+            Ok(path) => log::info!("PdfKu {}, log file {}", pdfcraft_engine::build_info::version(), path.display()),
             // Standard error only by now (`attach_dir` gave up on the file); unlike `eprintln!`, never panics.
             Err(e) => log::warn!("no log file: {e}"),
         }
     }
     // Windows, Linux and the BSDs: a launch that only names files (an Outlook attachment, an
-    // Explorer double-click, a file manager or `xdg-open`) hands them to the PdfCraft already
+    // Explorer double-click, a file manager or `xdg-open`) hands them to the PdfKu already
     // running and exits (#282, #317, #1726). Any option means the caller wants this launch's own
     // window.
     // Absolute for this instance too: links relative to a document resolve against its folder,
@@ -284,7 +284,7 @@ fn main() -> eframe::Result {
     let started = Rc::new(Cell::new(false));
     let first = if choice == RendererChoice::Gl { eframe::Renderer::Glow } else { eframe::Renderer::Wgpu };
     let result = eframe::run_native(
-        "PdfCraft",
+        "PdfKu",
         native_options(launch.integrated, launch.window_controls.is_some(), first),
         app_creator(
             launch.clone(),
@@ -302,7 +302,7 @@ fn main() -> eframe::Result {
             // usually still works there, so that's better than quitting.
             log::error!("the GPU renderer (wgpu) didn't start: {e}. Starting with OpenGL instead; set PDFCRAFT_RENDERER=gl to skip wgpu.");
             eframe::run_native(
-                "PdfCraft",
+                "PdfKu",
                 native_options(launch.integrated, launch.window_controls.is_some(), eframe::Renderer::Glow),
                 app_creator(
                     launch,
@@ -345,7 +345,7 @@ fn retry_with_gl(choice: RendererChoice, app_started: bool) -> bool {
 /// The window and renderer settings for one run.
 fn native_options(integrated: bool, app_frame: bool, renderer: eframe::Renderer) -> eframe::NativeOptions {
     let mut viewport = egui::ViewportBuilder::default()
-        .with_title("PdfCraft")
+        .with_title("PdfKu")
         .with_inner_size([1440.0, 920.0])
         .with_min_inner_size(pdfcraft_ui_egui::MIN_WINDOW_SIZE)
         .with_drag_and_drop(true)
@@ -374,7 +374,7 @@ fn native_options(integrated: bool, app_frame: bool, renderer: eframe::Renderer)
     let persistence_path = settings_dir().map(|d| d.join("app.ron"));
     // Set explicitly, so the renderer never depends on which one eframe defaults to.
     let mut native = eframe::NativeOptions { viewport, persistence_path, renderer, ..Default::default() };
-    // PdfCraft installs its own last-resort system face (`PDFCRAFT_SYSTEM_FONTS`); eframe's
+    // PdfKu installs its own last-resort system face (`PDFCRAFT_SYSTEM_FONTS`); eframe's
     // provider would read every installed face, including proprietary ones, into every UI pass.
     native.system_font_fallback = false;
     if renderer == eframe::Renderer::Wgpu {
@@ -561,7 +561,7 @@ fn app_creator<'a>(
 /// `unsafe` calls.
 fn notify_software_renderer(app: &mut PdfCraftApp, device_type: eframe::wgpu::DeviceType) {
     if device_type == eframe::wgpu::DeviceType::Cpu {
-        app.notify_tr("PdfCraft is drawing without a graphics processor, so it may be slow. Updating the graphics driver may help.");
+        app.notify_tr("PdfKu is drawing without a graphics processor, so it may be slow. Updating the graphics driver may help.");
     }
 }
 
@@ -712,7 +712,7 @@ fn stage_control_file(
 ///   on the discrete one.
 /// - On Windows, use Direct3D 12, falling back to OpenGL, and never load Vulkan drivers unless
 ///   `WGPU_BACKEND` asks for them. Creating a Vulkan instance loads every installed Vulkan driver
-///   into the process, and a faulty one (an Intel driver in issue #37) crashed PdfCraft before
+///   into the process, and a faulty one (an Intel driver in issue #37) crashed PdfKu before
 ///   its window appeared. D3D12 is the native, best-supported backend there.
 /// - On Windows, Direct3D 12 presents through a DirectComposition visual rather than a swap chain
 ///   on the window itself, unless `WGPU_DX12_PRESENTATION_SYSTEM` says otherwise. While the window

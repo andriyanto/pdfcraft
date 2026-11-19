@@ -1,4 +1,4 @@
-//! pdfcraft-ui-egui — the first PdfCraft shell (L7).
+//! pdfcraft-ui-egui — the first PdfKu shell (L7).
 //!
 //! Layout grammar follows plan/acrobat/02-ui-ux.md §1: tab strip, mode bar, left tool panel,
 //! floating quick-action bar, document area, right panel + right rail with page navigation.
@@ -11,13 +11,14 @@
 
 /// The GitHub `owner/repo` this build's releases come from. This repository is its own project:
 /// update checks and downloads never go to the repository it was copied from.
-pub const RELEASES_REPO: &str = "andriyanto/pdfcraft";
+pub const RELEASES_REPO: &str = "andriyanto/pdfku";
 
-/// PdfCraft as craft-update knows it, with its 128 px icon and accent colour: the update
+/// PdfKu as craft-update knows it, with its 128 px icon and accent colour: the update
 /// prompt shows both, and an AppImage's menu entry gets the icon. Its releases are those of
 /// [`RELEASES_REPO`], and the prompt names that repository's owner as the developer.
 #[cfg(not(target_arch = "wasm32"))]
 pub const UPDATE_APP: craft_update::app::App = craft_update::app::App {
+    name: "PdfKu",
     repo: RELEASES_REPO,
     developer: "andriyanto",
     icon_png: Some(include_bytes!("../../../assets/app-icon/hicolor/128x128/apps/ai.storyteller.pdfcraft.png")),
@@ -444,7 +445,7 @@ pub struct PdfCraftApp {
     pub fill_tool: fill_sign::FillTool,
     /// Colour for new Fill & Sign text and dates, kept across launches.
     pub fill_text_color: [f64; 3],
-    /// Border around new Fill & Sign text and dates, in points (0: none), until PdfCraft quits:
+    /// Border around new Fill & Sign text and dates, in points (0: none), until PdfKu quits:
     /// each launch starts from [`Self::fill_text_default`].
     pub fill_text_border: f64,
     /// That border's own colour (`None`: the text's).
@@ -486,14 +487,14 @@ pub struct PdfCraftApp {
     pub recent: Vec<RecentFile>,
     /// How many recent files to keep, 0 for no list (Preferences ▸ Documents and view, #5572).
     pub recent_limit: usize,
-    /// Preferences: reopen the files that were open when PdfCraft last closed (#442).
+    /// Preferences: reopen the files that were open when PdfKu last closed (#442).
     pub reopen_last_session: bool,
     /// Restore last view settings when reopening documents (Preferences ▸ Documents and view;
     /// #1767): the page, zoom and page display a file was last shown with. On by default.
     pub restore_last_view: bool,
     /// How files were last shown, most recent first (see `last_view`).
     pub last_views: Vec<last_view::LastView>,
-    /// The files open when PdfCraft last closed, read from the settings for
+    /// The files open when PdfKu last closed, read from the settings for
     /// [`PdfCraftApp::reopen_last_files`].
     pub last_session: last_session::LastSession,
     /// Quitting closes unsaved tabs one by one: what was open when the quit began.

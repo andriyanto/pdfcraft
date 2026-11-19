@@ -334,8 +334,8 @@ fn vendor_provenance_egui_wgpu_surface_fit_identity() {
 fn a_gpu_error_while_a_window_is_set_up_is_returned_not_a_panic() {
     // Issue #519: on a 2015 Intel GPU, wgpu's GL backend couldn't configure the window's
     // surface (`GpuWaitTimeout`), and wgpu's default error handler panicked before the app was
-    // created, so PdfCraft never got to retry with OpenGL. vendor/egui-wgpu configures a new
-    // window's surface inside `catch_errors`. A real device on PdfCraft's own GPU settings,
+    // created, so PdfKu never got to retry with OpenGL. vendor/egui-wgpu configures a new
+    // window's surface inside `catch_errors`. A real device on PdfKu's own GPU settings,
     // and an error wgpu raises before anything reaches the driver: a texture one pixel wider
     // than the device allows.
     use eframe::wgpu;
