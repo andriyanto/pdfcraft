@@ -1,34 +1,38 @@
-# PdfCraft app icon
+# PdfKu app icon
 
-<img src="pdfcraft-small.svg" alt="PdfCraft app icon: an engraved lion's head on red" width="128">
+<img src="pdfcraft-small.svg" alt="PdfKu app icon: a green K above an open book on brick red" width="128">
 
-**Creature:** a lion, in a frontal head-and-shoulders portrait, mane running off the bottom of the tile.
+**Design:** a green letter K above an open book whose pages read "Pdf" and "Ku", on a brick-red
+rounded tile. The project owner's original design.
 
-**Style:** an engraving (woodcut-weight line work) portrait in the Crafting Apps "owl template" framing:
-a full-bleed colour field, no frame or roundel, the animal looking at the viewer and filling the tile.
-
-**Palette:** exactly three colours.
+**Palette:**
 
 | Colour | Hex | Used for |
 |---|---|---|
-| Ink | `#0b0b0c` | line work and the figure's contour |
-| Paper | `#efe9dc` | the figure (the lion's silhouette) |
-| PdfCraft red (app colour) | `#b70228` | the full-bleed field |
+| Brick red | `#B5472B` | the tile and the lettering |
+| Emerald | `#50C878` | the letter K |
+| Ghost white | `#F8F8FF` | the book's pages |
 
-**Tile:** `viewBox="0 0 512 512"`, a rounded square with `rx=112` that clips everything. Windows and Linux
-icons use the full-bleed tile. macOS icons put it on Apple's grid (an 824 px body centred on a transparent
-1024 px canvas).
+**Tile:** `viewBox="0 0 512 512"`, a rounded square with `rx=104`. Windows and Linux icons use the
+full-bleed tile. macOS icons put it on Apple's grid (an 824 px body centred on a transparent 1024 px
+canvas).
 
-**Provenance:** the project owner's original drawing, made in ArtCraft (2880 px, keyed to the palette), then
-vectorised (potrace; no filtering or warping).
+**Lettering:** "Pdf" and "Ku" are outlines, not text: the glyphs of Inter SemiBold (OFL-1.1, already
+in `assets/fonts/`) placed along each page's curve, so no font is needed to draw the icon and it looks
+the same everywhere. Below about 48 px the lettering is too small to read; the K and the book carry
+the icon at those sizes.
+
+**File names:** the files keep their `pdfcraft` names and the `ai.storyteller.pdfcraft` id for now:
+the build, the installers and the release workflow refer to them by those names.
+
 Licence: [LICENSE.txt](LICENSE.txt) (`MIT OR Apache-2.0`, like the repo).
 
 ## Files
 
 | File | What it is |
 |---|---|
-| `pdfcraft.svg` | the master vector (traced at 2048 px); every PNG, `.ico` and `.icns` is rendered from it |
-| `pdfcraft-small.svg` | a lighter vector (traced at 1024 px) for places where size matters, such as this README |
+| `pdfcraft.svg` | the master vector; every PNG, `.ico` and `.icns` is rendered from it |
+| `pdfcraft-small.svg` | a copy of the master, for the README |
 | `pdfcraft-1024.png` | 1024 px on Apple's grid; also the runtime Dock icon on macOS |
 | `pdfcraft.icns` | macOS icon (16–1024 px) |
 | `pdfcraft.ico` | Windows icon (16–256 px), embedded in `pdfcraft.exe` by `apps/pdfcraft/build.rs` |
