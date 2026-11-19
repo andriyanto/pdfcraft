@@ -7,6 +7,10 @@ use std::path::{Path, PathBuf};
 /// PdfKu has no page of its own: its repository's README is its page.
 pub const APP_PAGE: &str = "https://github.com/andriyanto/pdfku#readme";
 pub const GITHUB: &str = "https://github.com/andriyanto/pdfku";
+/// The project PdfKu is a modified version of.
+pub const ORIGINAL: &str = "https://github.com/storytold/pdfcraft";
+/// The GitHub account of the person who modifies PdfKu, as About names them.
+pub const MODIFIER: &str = "andriyanto";
 /// Where problems are reported and help is asked for.
 pub const ISSUES: &str = "https://github.com/andriyanto/pdfku/issues";
 

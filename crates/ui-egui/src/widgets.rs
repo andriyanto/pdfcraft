@@ -701,6 +701,20 @@ pub fn app_icon(ui: &mut egui::Ui, size: f32) -> Response {
     )
 }
 
+/// One line that says what PdfKu is made from and who modifies it: About shows it with the app's
+/// description and again above the contributors, who are those of the original project.
+pub fn modification_note(ui: &mut egui::Ui) {
+    let modifier = pdfcraft_engine::links::MODIFIER;
+    ui.horizontal_wrapped(|ui| {
+        ui.spacing_mut().item_spacing.x = 4.0;
+        ui.label(tl!("PdfKu is a modified version of"));
+        ui.hyperlink_to("PdfCraft", pdfcraft_engine::links::ORIGINAL);
+        ui.label("·");
+        ui.label(tl!("Modified by"));
+        ui.hyperlink_to(format!("@{modifier}"), format!("https://github.com/{modifier}"));
+    });
+}
+
 /// Buttons for every project link (`pdfcraft_engine::links`), the first one prominent.
 /// Returns the registry command of the one clicked.
 pub fn project_links(ui: &mut egui::Ui) -> Option<&'static str> {

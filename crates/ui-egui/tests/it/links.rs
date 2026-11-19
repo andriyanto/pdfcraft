@@ -68,9 +68,17 @@ fn about_dialog_shows_the_app_and_its_links() {
     });
     assert!(h.query_all_by_label("PdfKu").count() >= 2, "the icon (alt text) and the name");
     assert!(h.query_by_label("ArtCraft").is_none(), "the brand of the project PdfKu was copied from is gone");
+    // About says what PdfKu is made from and who modifies it, on its first tab and above the
+    // contributors, who are the original project's.
+    h.get_by_label("PdfKu is a modified version of");
+    h.get_by_label("PdfCraft");
+    h.get_by_label("@andriyanto");
     h.get_by_label("Report a problem").click();
     h.run_steps(2);
     assert_eq!(h.state().last_opened_url.as_deref(), Some(links::ISSUES));
+    settled(&mut h, "Contributors").click();
+    settled(&mut h, "@andriyanto");
+    h.get_by_label("PdfKu is a modified version of");
 }
 
 #[test]
