@@ -119,7 +119,7 @@ neither the MSI nor the portable zip needs the Visual C++ redistributable.
   `pdfcraft.exe` must be a GUI-subsystem program (no console window, #57) while `pdfcraft-cli.exe`
   stays a console program.
 - `pdfcraft.wxs` (WiX v5) is a dual-scope package (per-user by default into
-  `%LOCALAPPDATA%\Programs\ArtCraft\PdfCraft`, per-machine into `Program Files\ArtCraft\PdfCraft` (`Program Files (x86)` for the 32-bit build),
+  `%LOCALAPPDATA%\Programs\Produktivitas\PdfKu`, per-machine into `Program Files\Produktivitas\PdfKu` (`Program Files (x86)` for the 32-bit build),
   see `packaging/windows/INSTALLATION.md`) with a Start Menu shortcut, a
   desktop shortcut (on by default) and an App Paths entry. Both shortcuts are plain links to
   `pdfcraft.exe`, not advertised MSI shortcuts (#107, #143). The MSI version is the numeric `X.Y.Z`
@@ -139,7 +139,7 @@ neither the MSI nor the portable zip needs the Visual C++ redistributable.
   (`INSTALLATION.md`). `/qn` and `/qb` stay unattended and create both unless
   `INSTALLDESKTOPSHORTCUT=0` or `INSTALLPDFCONTEXTMENU=0` is passed;
   `INSTALLIMAGECONTEXTMENU=0` (no checkbox) leaves out the image menu. An update (the launcher runs
-  `msiexec /passive` with no properties) keeps the desktop shortcut only if `PdfCraft.lnk` is still
+  `msiexec /passive` with no properties) keeps the desktop shortcut only if `PdfKu.lnk` is still
   on the all-users desktop, so deleting it once keeps it away (#1058), and keeps each menu only if
   its key path is still in HKLM (#305). Both are AppSearch results read before the old version is
   removed. An update from a release that didn't have a menu yet (before 0.7.1 for the PDF menu,

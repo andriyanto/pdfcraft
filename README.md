@@ -502,7 +502,7 @@ didn't have a menu yet (0.6.0 and earlier for the PDF menu, 0.2.1 and earlier fo
 adds it, as a first install would. Use the MSI for your architecture. Per-user installation
 overrides are not supported.
 
-To install somewhere other than the default `ArtCraft\PdfCraft` folder, change the folder on the
+To install somewhere other than the default `Produktivitas\PdfKu` folder, change the folder on the
 welcome screen (type it, or Browse…) or pass it on the command line:
 `INSTALLFOLDER="D:\Apps\PdfCraft"`. It is installed for whoever the first screen chose (`ALLUSERS=1`
 on the command line for everyone). An upgrade keeps the folder the installed version uses unless
