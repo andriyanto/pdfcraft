@@ -1,6 +1,10 @@
 //! Office documents (Word, Excel, PowerPoint, OpenDocument, RTF) to PDF through an installed
-//! LibreOffice, run as a separate process: the "LibreOffice sidecar" of
+//! converter, run as a separate process: the "LibreOffice sidecar" of
 //! `docs/file-format-parity.md`. PdfKu never parses these formats itself.
+//!
+//! Word-processing documents ([`WORDKU_EXTENSIONS`]) go to WordKu's command-line tool
+//! (`wordku-cli convert`) when WordKu is installed, and to LibreOffice when it isn't or when
+//! WordKu can't convert the file. Everything else goes to LibreOffice.
 //!
 //! Detection ([`is_office`]) is pure and works everywhere. Conversion ([`office_to_pdf`]) runs
 //! only on desktop builds: each run gets its own temporary folder and a fresh LibreOffice
@@ -17,6 +21,10 @@ pub const OFFICE_EXTENSIONS: &[&str] = &[
     // PowerPoint and Impress
     "ppt", "pptx", "pptm", "pot", "potx", "potm", "pps", "ppsx", "ppsm", "odp", "otp",
 ];
+
+/// The extensions of the word-processing documents `wordku-cli convert` reads: Word (current
+/// and 97–2003), OpenDocument Text and RTF.
+pub const WORDKU_EXTENSIONS: &[&str] = &["docx", "docm", "doc", "odt", "rtf"];
 
 /// The OLE compound-file signature of Office 97–2003 files (`.doc`, `.xls`, `.ppt`).
 const OLE: &[u8] = &[0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1];
@@ -48,15 +56,56 @@ pub fn office_to_pdf(name: &str, _bytes: &[u8]) -> Result<Vec<u8>, CreateError> 
     Err(CreateError::Office(format!("{name}: Office documents open only in the desktop app, which converts them with LibreOffice")))
 }
 
-/// Convert the Office document `bytes` named `name` to PDF bytes with LibreOffice.
+/// Whether WordKu converts `name`: a word-processing document ([`WORDKU_EXTENSIONS`]).
+fn wordku_reads(name: &str) -> bool {
+    office_extension(name).is_some_and(|ext| WORDKU_EXTENSIONS.contains(&ext))
+}
+
+/// Convert the Office document `bytes` named `name` to PDF bytes: with WordKu for a
+/// word-processing document when WordKu is installed, otherwise (or when WordKu can't) with
+/// LibreOffice.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn office_to_pdf(name: &str, bytes: &[u8]) -> Result<Vec<u8>, CreateError> {
-    let program = native::libreoffice().ok_or_else(|| {
-        CreateError::Office(format!(
-            "{name}: opening Word, Excel and PowerPoint files needs LibreOffice, which isn't installed (get it free from libreoffice.org)"
-        ))
-    })?;
-    native::convert_with(&program, name, bytes, TIMEOUT)
+    convert_through(name, bytes, wordku_reads(name).then(native::wordku).flatten(), native::libreoffice())
+}
+
+/// [`office_to_pdf`] with the converters found: WordKu first when it is given, then LibreOffice.
+#[cfg(not(target_arch = "wasm32"))]
+fn convert_through(
+    name: &str,
+    bytes: &[u8],
+    wordku: Option<std::path::PathBuf>,
+    libreoffice: Option<std::path::PathBuf>,
+) -> Result<Vec<u8>, CreateError> {
+    let mut wordku_failed = None;
+    if let Some(program) = wordku {
+        match native::convert_with_wordku(&program, name, bytes, TIMEOUT) {
+            Ok(pdf) => return Ok(pdf),
+            Err(error) => wordku_failed = Some(error),
+        }
+    }
+    match (libreoffice, wordku_failed) {
+        (Some(program), wordku_failed) => native::convert_with(&program, name, bytes, TIMEOUT).map_err(|error| match wordku_failed {
+            // Both were tried: say what each said.
+            Some(CreateError::Office(first)) => CreateError::Office(format!("{first}; {error}")),
+            _ => error,
+        }),
+        (None, Some(error)) => Err(error),
+        (None, None) if wordku_reads(name) => Err(CreateError::Office(format!(
+            "{name}: opening Word files needs WordKu or LibreOffice, and neither is installed \
+             (WordKu: github.com/andriyanto/wordku; LibreOffice: libreoffice.org)"
+        ))),
+        (None, None) => Err(CreateError::Office(format!(
+            "{name}: opening Excel and PowerPoint files needs LibreOffice, which isn't installed (get it free from libreoffice.org)"
+        ))),
+    }
+}
+
+/// Where WordKu's command-line tool is installed, if it is: `PDFKU_WORDKU`, then the `PATH`,
+/// then the folder WordKu's installer recorded (Windows), then the usual install folders.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn wordku() -> Option<std::path::PathBuf> {
+    native::wordku()
 }
 
 /// Where LibreOffice is installed, if it is: `PDFCRAFT_SOFFICE`, then the `PATH`, then the
@@ -80,6 +129,143 @@ mod native {
     const PATH_NAMES: &[&str] = &["soffice.exe"];
     #[cfg(not(windows))]
     const PATH_NAMES: &[&str] = &["soffice", "libreoffice"];
+
+    /// The program name of WordKu's command-line tool.
+    #[cfg(windows)]
+    const WORDKU_CLI: &str = "wordku-cli.exe";
+    #[cfg(not(windows))]
+    const WORDKU_CLI: &str = "wordku-cli";
+
+    pub(super) fn wordku() -> Option<PathBuf> {
+        let mut defaults = installed_wordku_folders().into_iter().map(|dir| dir.join(WORDKU_CLI)).collect::<Vec<_>>();
+        defaults.extend(wordku_locations(&|key| std::env::var_os(key)));
+        wordku_candidates(std::env::var_os("PDFKU_WORDKU"), std::env::var_os("PATH"), defaults).into_iter().find(|p| p.is_file())
+    }
+
+    /// Where to look for WordKu, in order: the override, each `PATH` folder, then `defaults`.
+    pub(super) fn wordku_candidates(override_path: Option<OsString>, path: Option<OsString>, defaults: Vec<PathBuf>) -> Vec<PathBuf> {
+        let mut out: Vec<PathBuf> = override_path.filter(|p| !p.is_empty()).map(PathBuf::from).into_iter().collect();
+        if let Some(path) = path {
+            out.extend(std::env::split_paths(&path).map(|dir| dir.join(WORDKU_CLI)));
+        }
+        out.extend(defaults);
+        out
+    }
+
+    /// The folders WordKu's installer recorded as `InstallDir` (per user, then per machine): a
+    /// copy installed somewhere other than the default folder is found there.
+    #[cfg(windows)]
+    fn installed_wordku_folders() -> Vec<PathBuf> {
+        use std::os::windows::process::CommandExt;
+        // Windows' own `reg.exe`, not whatever the PATH finds first.
+        let Some(reg) = std::env::var_os("SystemRoot").map(|root| PathBuf::from(root).join("System32").join("reg.exe")) else {
+            return Vec::new();
+        };
+        ["HKCU\\Software\\WordKu", "HKLM\\Software\\WordKu"]
+            .iter()
+            .filter_map(|key| {
+                let mut command = Command::new(&reg);
+                command.args(["query", key, "/v", "InstallDir"]).stdin(Stdio::null()).stderr(Stdio::null());
+                // CREATE_NO_WINDOW: no console window flashes up.
+                command.creation_flags(0x0800_0000);
+                let out = command.output().ok().filter(|out| out.status.success())?;
+                reg_install_dir(&String::from_utf8_lossy(&out.stdout))
+            })
+            .collect()
+    }
+
+    #[cfg(not(windows))]
+    fn installed_wordku_folders() -> Vec<PathBuf> {
+        Vec::new()
+    }
+
+    /// The `InstallDir` value in `reg query … /v InstallDir` output: the line
+    /// `    InstallDir    REG_SZ    C:\…\WordKu\`. `None` when it isn't there or is empty.
+    #[cfg_attr(not(windows), allow(dead_code))]
+    pub(super) fn reg_install_dir(output: &str) -> Option<PathBuf> {
+        output.lines().find_map(|line| {
+            let rest = line.trim_start().strip_prefix("InstallDir")?;
+            let value = rest.trim_start().strip_prefix("REG_SZ")?.trim();
+            (!value.is_empty()).then(|| PathBuf::from(value))
+        })
+    }
+
+    /// WordKu's usual install locations, given a way to read environment variables: its
+    /// installer's default folders (`Produktivitas\WordKu`, per user and per machine).
+    #[cfg(windows)]
+    pub(super) fn wordku_locations(env: &dyn Fn(&str) -> Option<OsString>) -> Vec<PathBuf> {
+        let mut out: Vec<PathBuf> = env("LOCALAPPDATA").map(|d| PathBuf::from(d).join("Programs")).into_iter().collect();
+        out.extend(["ProgramFiles", "ProgramW6432", "ProgramFiles(x86)"].iter().filter_map(|key| env(key)).map(PathBuf::from));
+        out.into_iter().map(|dir| dir.join("Produktivitas").join("WordKu").join(WORDKU_CLI)).collect()
+    }
+
+    /// WordKu's usual install locations, given a way to read environment variables: inside the
+    /// app bundle, and where the separate command-line download is usually put.
+    #[cfg(target_os = "macos")]
+    pub(super) fn wordku_locations(env: &dyn Fn(&str) -> Option<OsString>) -> Vec<PathBuf> {
+        let in_app = Path::new("WordKu.app/Contents/MacOS").join(WORDKU_CLI);
+        let mut out = vec![Path::new("/Applications").join(&in_app)];
+        out.extend(env("HOME").map(|home| PathBuf::from(home).join("Applications").join(&in_app)));
+        out.extend(["/usr/local/bin", "/opt/homebrew/bin"].iter().map(|dir| Path::new(dir).join(WORDKU_CLI)));
+        out
+    }
+
+    /// WordKu's usual install locations: where its packages put the command-line tool.
+    #[cfg(not(any(windows, target_os = "macos")))]
+    pub(super) fn wordku_locations(_env: &dyn Fn(&str) -> Option<OsString>) -> Vec<PathBuf> {
+        ["/usr/bin", "/usr/local/bin"].iter().map(|dir| Path::new(dir).join(WORDKU_CLI)).collect()
+    }
+
+    /// Convert with WordKu's command-line tool at `program` (`wordku-cli convert IN OUT.pdf`),
+    /// giving up after `timeout`, in a private folder as for LibreOffice.
+    pub(super) fn convert_with_wordku(program: &Path, name: &str, bytes: &[u8], timeout: Duration) -> Result<Vec<u8>, CreateError> {
+        let too_large = || format!("the converted PDF is larger than {} MB", MAX_PDF / (1024 * 1024));
+        let failed = |why: String| CreateError::Office(format!("{name}: {why}"));
+        let ext = office_extension(name).ok_or_else(|| failed("this isn't a Word file".into()))?;
+        let work = WorkDir::new().map_err(|e| failed(format!("couldn't make a temporary folder: {e}")))?;
+        // A fixed input name: the document's own name never reaches WordKu's command line.
+        let input = work.0.join(format!("document.{ext}"));
+        let out = work.0.join("out");
+        let pdf = out.join("document.pdf");
+        let errors = work.0.join("errors.txt");
+        let prepared = std::fs::write(&input, bytes).and_then(|()| std::fs::create_dir(&out));
+        prepared.map_err(|e| failed(format!("couldn't prepare the conversion: {e}")))?;
+        let stderr = std::fs::File::create(&errors).map_err(|e| failed(format!("couldn't prepare the conversion: {e}")))?;
+
+        let mut command = Command::new(program);
+        command.arg("convert").arg(&input).arg(&pdf).current_dir(&work.0).stdin(Stdio::null()).stdout(Stdio::null()).stderr(stderr);
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            // CREATE_NO_WINDOW: no console window flashes up during the conversion.
+            command.creation_flags(0x0800_0000);
+        }
+        let status = match run_limited(command, timeout, Some((&out, MAX_PDF))) {
+            Ok(Run::Exited(status)) => status,
+            Ok(Run::TooLarge) => return Err(failed(format!("{}; WordKu was stopped", too_large()))),
+            Ok(Run::TimedOut) => return Err(failed(format!("WordKu took longer than {} seconds and was stopped", timeout.as_secs()))),
+            Err(e) => return Err(failed(format!("couldn't start WordKu ({}): {e}", program.display()))),
+        };
+        if !status.success() {
+            // Its own explanation, the last line of what it wrote to standard error, kept short.
+            let said = std::fs::read_to_string(&errors).unwrap_or_default();
+            let said: String = said.lines().rev().map(str::trim).find(|l| !l.is_empty()).unwrap_or_default().chars().take(200).collect();
+            return Err(failed(if said.is_empty() {
+                format!("WordKu couldn't convert it ({status})")
+            } else {
+                format!("WordKu couldn't convert it: {said}")
+            }));
+        }
+        let size = std::fs::metadata(&pdf).map_err(|_| failed("WordKu didn't produce a PDF".into()))?.len();
+        if size > MAX_PDF {
+            return Err(failed(too_large()));
+        }
+        let bytes = std::fs::read(&pdf).map_err(|e| failed(format!("couldn't read the converted PDF: {e}")))?;
+        if !bytes.starts_with(b"%PDF-") {
+            return Err(failed("WordKu's output isn't a PDF".into()));
+        }
+        Ok(bytes)
+    }
 
     pub(super) fn libreoffice() -> Option<PathBuf> {
         let defaults = default_locations(&|key| std::env::var_os(key));
@@ -473,6 +659,100 @@ mod tests {
             command.args(["--ignored", "--exact", test, "--nocapture"]).env(HEARTBEAT, heartbeat);
             command.stdin(std::process::Stdio::null()).stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null());
             command
+        }
+
+        #[test]
+        fn wordku_takes_word_documents_only() {
+            use super::super::wordku_reads;
+            for name in ["a.docx", "A.DOCX", "a.doc", "a.docm", "a.odt", "a.rtf"] {
+                assert!(wordku_reads(name), "{name}");
+            }
+            for name in ["a.xlsx", "a.pptx", "a.ods", "a.odp", "a.dotx", "a.txt", "docx"] {
+                assert!(!wordku_reads(name), "{name}");
+            }
+        }
+
+        #[test]
+        fn wordku_is_looked_for_in_the_override_then_the_path_then_the_defaults() {
+            let path = std::env::join_paths([Path::new("first"), Path::new("second")]).unwrap();
+            let found = wordku_candidates(Some(OsString::from("custom/wordku-cli")), Some(path), vec![PathBuf::from("default/wordku-cli")]);
+            assert_eq!(found.first(), Some(&PathBuf::from("custom/wordku-cli")));
+            assert!(found.get(1).is_some_and(|p| p.starts_with("first") && p.to_string_lossy().contains("wordku-cli")));
+            assert_eq!(found.last(), Some(&PathBuf::from("default/wordku-cli")));
+            assert_eq!(wordku_candidates(Some(OsString::new()), None, Vec::new()), Vec::<PathBuf>::new());
+            assert!(wordku_locations(&|_| None).iter().all(|p| p.is_absolute()));
+        }
+
+        #[test]
+        fn the_install_folder_wordkus_installer_recorded_is_read_from_reg_output() {
+            let out = "\r\nHKEY_CURRENT_USER\\Software\\WordKu\r\n    InstallDir    REG_SZ    C:\\Users\\Jo Ann\\Apps\\WordKu\\\r\n\r\n";
+            assert_eq!(reg_install_dir(out), Some(PathBuf::from("C:\\Users\\Jo Ann\\Apps\\WordKu\\")));
+            assert_eq!(reg_install_dir("    InstallDir    REG_SZ    \r\n"), None);
+            assert_eq!(reg_install_dir("    InstallDirectory    REG_SZ    C:\\x\r\n"), None);
+            assert_eq!(reg_install_dir("    InstallDir    REG_DWORD    0x1\r\n"), None);
+            assert_eq!(reg_install_dir(""), None);
+        }
+
+        /// A stand-in converter: a shell script with `body`, made executable.
+        #[cfg(unix)]
+        fn script(dir: &Path, name: &str, body: &str) -> PathBuf {
+            use std::os::unix::fs::PermissionsExt;
+            let path = dir.join(name);
+            std::fs::write(&path, format!("#!/bin/sh\n{body}\n")).unwrap();
+            std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).unwrap();
+            path
+        }
+
+        /// `wordku-cli convert IN OUT` writing a PDF that says it came from WordKu.
+        #[cfg(unix)]
+        const WORDKU_OK: &str = r#"[ "$1" = convert ] || exit 9; printf '%%PDF-1.7 wordku' > "$3""#;
+        /// `wordku-cli` refusing the file, with its reason on standard error.
+        #[cfg(unix)]
+        const WORDKU_FAILS: &str = r#"echo "warning: something" >&2; echo "error: unsupported Word feature" >&2; exit 2"#;
+        /// `soffice … --outdir OUT IN` writing a PDF that says it came from LibreOffice.
+        #[cfg(unix)]
+        const SOFFICE_OK: &str = r#"for last; do :; done; eval "out=\${$(($#-1))}"; printf '%%PDF-1.7 libreoffice' > "$out/document.pdf""#;
+
+        #[cfg(unix)]
+        #[test]
+        fn a_word_document_goes_to_wordku_when_it_is_installed() {
+            use super::super::convert_through;
+            let work = WorkDir::new().unwrap();
+            let wordku = script(&work.0, "wordku-cli", WORDKU_OK);
+            let soffice = script(&work.0, "soffice", SOFFICE_OK);
+            let pdf = convert_through("Letter.docx", DOCX_HEAD, Some(wordku), Some(soffice.clone())).unwrap();
+            assert_eq!(pdf, b"%PDF-1.7 wordku");
+            // Without WordKu, LibreOffice converts it, as before.
+            assert_eq!(convert_through("Letter.docx", DOCX_HEAD, None, Some(soffice)).unwrap(), b"%PDF-1.7 libreoffice");
+        }
+
+        #[cfg(unix)]
+        #[test]
+        fn when_wordku_cannot_convert_libreoffice_does_and_without_it_wordkus_reason_is_given() {
+            use super::super::convert_through;
+            let work = WorkDir::new().unwrap();
+            let wordku = script(&work.0, "wordku-cli", WORDKU_FAILS);
+            let soffice = script(&work.0, "soffice", SOFFICE_OK);
+            let pdf = convert_through("Letter.docx", DOCX_HEAD, Some(wordku.clone()), Some(soffice)).unwrap();
+            assert_eq!(pdf, b"%PDF-1.7 libreoffice");
+            let Err(crate::CreateError::Office(message)) = convert_through("Letter.docx", DOCX_HEAD, Some(wordku), None) else {
+                panic!("WordKu failed and there is no LibreOffice")
+            };
+            assert_eq!(message, "Letter.docx: WordKu couldn't convert it: error: unsupported Word feature");
+        }
+
+        #[cfg(not(target_arch = "wasm32"))]
+        #[test]
+        fn with_no_converter_the_message_names_what_to_install() {
+            use super::super::convert_through;
+            let message = |name: &str| match convert_through(name, DOCX_HEAD, None, None) {
+                Err(crate::CreateError::Office(m)) => m,
+                other => panic!("{other:?}"),
+            };
+            let word = message("Letter.docx");
+            assert!(word.contains("WordKu") && word.contains("LibreOffice"), "{word}");
+            let sheet = message("Budget.xlsx");
+            assert!(sheet.contains("LibreOffice") && !sheet.contains("WordKu"), "{sheet}");
         }
 
         /// `soffice` starts `soffice.bin` as its own child: a timeout must stop both, or the

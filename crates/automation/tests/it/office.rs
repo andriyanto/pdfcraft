@@ -202,7 +202,9 @@ fn office_files() -> Option<(tempfile::TempDir, Automation)> {
     std::fs::write(dir.path().join("deck.pptx"), pptx("Axolotl deck")).unwrap();
     std::fs::write(dir.path().join("notes.rtf"), rtf("Pangolin notes")).unwrap();
     let mut a = auto(dir.path());
-    match a.call("doc_create_multiple", &json!({ "paths": ["notes.rtf"] })) {
+    // Probe with the slides: Word files may go to WordKu instead, but every test here also
+    // converts a spreadsheet and slides, which only LibreOffice reads.
+    match a.call("doc_create_multiple", &json!({ "paths": ["deck.pptx"] })) {
         Err(ToolError::Failed(e)) if e.contains("needs LibreOffice") => {
             eprintln!("skipped: LibreOffice isn't installed");
             None
