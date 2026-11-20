@@ -30,9 +30,22 @@ fn nothing_points_at_the_project_pdfku_was_copied_from() {
     }
 }
 
+/// The community button opens the README at its community section, which holds the WhatsApp
+/// invite; the section's heading is what GitHub turns into the `#komunitas` anchor, so renaming
+/// it would leave the button opening the top of the README.
+#[test]
+fn the_community_link_lands_on_the_readmes_community_section() {
+    let readme = include_str!("../../../../README.md");
+    let anchor = links::COMMUNITY.rsplit_once('#').map(|(_, a)| a).unwrap_or_default();
+    assert_eq!(anchor, "komunitas");
+    assert!(readme.lines().any(|l| l == "## Komunitas"), "README.md has no “## Komunitas” heading");
+}
+
 #[test]
 fn home_screen_links() {
     for (label, url) in [
+        ("Join the community", "https://github.com/andriyanto/pdfku#komunitas"),
+        ("Discussions", "https://github.com/andriyanto/pdfku/discussions"),
         ("PdfKu on GitHub", "https://github.com/andriyanto/pdfku"),
         ("PdfKu web page", "https://github.com/andriyanto/pdfku#readme"),
         ("Report a problem", "https://github.com/andriyanto/pdfku/issues"),
@@ -76,6 +89,9 @@ fn about_dialog_shows_the_app_and_its_links() {
     h.get_by_label("Report a problem").click();
     h.run_steps(2);
     assert_eq!(h.state().last_opened_url.as_deref(), Some(links::ISSUES));
+    h.get_by_label("Join the community").click();
+    h.run_steps(2);
+    assert_eq!(h.state().last_opened_url.as_deref(), Some(links::COMMUNITY));
     settled(&mut h, "Contributors").click();
     settled(&mut h, "@andriyanto");
     h.get_by_label("PdfKu is a modified version of");

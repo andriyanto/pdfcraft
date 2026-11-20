@@ -94,6 +94,19 @@ menjalankannya sendiri**, berbicara lewat stdin/stdout, dan tidak membuka port j
 Rinciannya ada di [crates/automation/README.md](crates/automation/README.md) dan
 [docs/mcp.md](docs/mcp.md).
 
+## Komunitas
+
+Tombol **Join the community** di PdfKu membuka bagian ini.
+
+- **Grup WhatsApp:** [Gabung grup komunitas PdfKu](TAUTAN-GRUP-WA) untuk tanya jawab santai dan
+  kabar terbaru. Nomor HP Anda terlihat oleh anggota lain di grup, jadi bergabunglah hanya jika
+  Anda nyaman dengan itu.
+- **[GitHub Discussions](https://github.com/andriyanto/pdfku/discussions):** untuk pertanyaan, ide,
+  dan diskusi yang bisa dicari lagi nanti, tanpa membagikan nomor HP.
+
+Laporan masalah sebaiknya tetap lewat [Issues](https://github.com/andriyanto/pdfku/issues), supaya
+tidak tenggelam di obrolan.
+
 ## Bantuan dan laporan masalah
 
 Laporkan masalah atau usulkan perbaikan di

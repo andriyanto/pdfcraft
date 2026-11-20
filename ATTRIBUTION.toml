@@ -1892,6 +1892,17 @@ usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "15811db4bba24c2f413a252a78e5ba885e8fe9234ca0f182d0b6039685dee6b0"
 
 [[asset]]
+path = "assets/icons/users.svg"
+title = "Lucide icon \"users\""
+author = "Lucide Contributors (portions Cole Bemis, Feather)"
+source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/users.svg)"
+licence = "ISC AND MIT"
+licence_file = "assets/icons/LICENSE-lucide.txt"
+kind = "icon"
+usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
+sha256 = "8a88a935b10bc68abff339291915223e0f79e3b581e466e8fec92631482d6081"
+
+[[asset]]
 path = "assets/icons/wand-sparkles.svg"
 title = "Lucide icon \"wand-sparkles\""
 author = "Lucide Contributors (portions Cole Bemis, Feather)"

@@ -199,5 +199,6 @@ fn version() -> Result<(), CliError> {
     stdout_line(format_args!("pdfku-cli {}", pdfcraft_engine::build_info::version()))?;
     stdout_line(format_args!("Source:  {}", pdfcraft_engine::links::GITHUB))?;
     stdout_line(format_args!("Help:    {}  (problems and feedback)", pdfcraft_engine::links::ISSUES))?;
+    stdout_line(format_args!("Community: {}", pdfcraft_engine::links::COMMUNITY))?;
     Ok(())
 }
