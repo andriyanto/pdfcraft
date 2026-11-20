@@ -1011,9 +1011,9 @@ fn synthetic_docx() -> Vec<u8> {
     session.get(id).expect("the fixture").export_office(pdfcraft_engine::compare::OfficeFormat::Docx)
 }
 
-/// File ▸ Open of a Word document: LibreOffice runs on the open worker, never on the frame
-/// thread, and the result opens as a new, unsaved PDF. Without LibreOffice the user is
-/// told it is needed, rather than that the file is a broken PDF.
+/// File ▸ Open of a Word document: WordKu or LibreOffice runs on the open worker, never on the
+/// frame thread, and the result opens as a new, unsaved PDF. Without either the user is
+/// told what is needed, rather than that the file is a broken PDF.
 #[test]
 #[allow(clippy::expect_used)]
 fn file_open_converts_an_office_document_on_the_worker() {
@@ -1036,7 +1036,7 @@ fn file_open_converts_an_office_document_on_the_worker() {
         assert!(doc.path.is_none(), "the converted PDF is new and unsaved, not the .docx on disk");
     } else {
         let message = app.toast.as_ref().map(|(message, _)| message.clone()).unwrap_or_default();
-        assert!(message.contains("LibreOffice, which isn't installed"), "the failure names the missing dependency: {message}");
+        assert!(message.contains("needs WordKu or LibreOffice, and neither is installed"), "the failure names the missing dependency: {message}");
     }
 }
 

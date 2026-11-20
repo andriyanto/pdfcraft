@@ -15417,8 +15417,8 @@ fn calculate_now_simple_calculation_reads_formatted_values_and_groups_as_the_nat
     assert_eq!(total(&s), ["3244.75"]);
 }
 
-/// A Word document converts through LibreOffice when it is installed; without it, the error
-/// says what is missing rather than calling the file a broken PDF.
+/// A Word document converts through WordKu or LibreOffice when either is installed; without
+/// both, the error says what is missing rather than calling the file a broken PDF.
 #[test]
 fn office_documents_convert_through_libreoffice_or_explain_why_not() {
     let mut s = Session::new();
@@ -15434,12 +15434,10 @@ fn office_documents_convert_through_libreoffice_or_explain_why_not() {
         }
         // Only "not installed" is an acceptable failure: a conversion that fails, times out or
         // makes no PDF must fail this test.
-        Err(e) => assert!(e.to_string().contains("LibreOffice, which isn't installed"), "{e}"),
+        Err(e) => assert!(e.to_string().contains("needs WordKu or LibreOffice, and neither is installed"), "{e}"),
     }
     // Combine treats it as a file to convert, not as a PDF to pass through.
-    assert!(
-        s.as_pdf("Report.docx", &docx).map_or_else(|e| e.to_string().contains("LibreOffice, which isn't installed"), |pdf| pdf.starts_with(b"%PDF-"))
-    );
+    assert!(s.as_pdf("Report.docx", &docx).map_or_else(|e| e.to_string().contains("neither is installed"), |pdf| pdf.starts_with(b"%PDF-")));
 }
 
 /// The frame thread never waits for LibreOffice: Insert, Combine and Create Multiple refuse an
