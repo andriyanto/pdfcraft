@@ -13,9 +13,10 @@
   <img src="docs/images/pdfku-beranda.png" alt="Layar beranda PdfKu: panel All tools di kiri, kartu tautan proyek, dan alat yang disarankan" width="100%">
 </p>
 
-> **Status:** PdfKu belum punya rilis. Untuk mencobanya sekarang, bangun dari kode sumber
-> (lihat [Membangun dari kode sumber](#membangun-dari-kode-sumber)). Installer akan tersedia di
-> halaman [Releases](https://github.com/andriyanto/pdfku/releases) setelah rilis pertama.
+> **Unduh:** installer untuk Windows, macOS, dan Linux ada di halaman
+> [Releases](https://github.com/andriyanto/pdfku/releases). Installer belum bertanda tangan digital,
+> jadi Windows dan macOS mungkin menampilkan peringatan saat pertama kali dibuka. Anda juga bisa
+> [membangun dari kode sumber](#membangun-dari-kode-sumber).
 
 ## Apa yang bisa dilakukan
 
